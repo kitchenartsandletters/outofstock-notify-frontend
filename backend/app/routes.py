@@ -13,13 +13,6 @@ class InterestRequest(BaseModel):
 
 @router.api_route("/interest", methods=["POST", "OPTIONS"])
 async def create_interest(req: Request):
-    if req.method == "OPTIONS":
-        response = Response()
-        response.headers["Access-Control-Allow-Origin"] = "https://www.kitchenartsandletters.com"
-        response.headers["Access-Control-Allow-Methods"] = "POST, OPTIONS"
-        response.headers["Access-Control-Allow-Headers"] = "Content-Type"
-        response.headers["Access-Control-Max-Age"] = "86400"
-        return response
 
     try:
         body = await req.json()
@@ -44,3 +37,7 @@ async def get_interest_entries(token: str = ""):
         return {"success": True, "data": result.data}
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
+    
+@app.get("/")
+async def root():
+    return {"message": "Server is live"}

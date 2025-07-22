@@ -28,7 +28,7 @@ Admins
 
 Frontend (.env)
 
-VITE_API_BASE_URL=https://outofstock-notify-production.up.railway.app
+	VITE_API_BASE_URL=https://outofstock-notify-production.up.railway.app
 VITE_ADMIN_TOKEN=devtesttoken123
 
 Backend (Railway ENV)
@@ -61,13 +61,11 @@ Protected by token: must match VITE_ADMIN_TOKEN.
 ⚠️ Key Debugging Fixes
 	•	✅ VITE_API_BASE_URL must be fully qualified (e.g. https://...)
 	•	✅ Removed extraneous = in fetch:
-
-`${VITE_API_BASE_URL}/api/interest?token${VITE_ADMIN_TOKEN}` // ✅ no '='
-
-
+		`${VITE_API_BASE_URL}/api/interest?token${VITE_ADMIN_TOKEN}` // ✅ no '='
 	•	✅ FastAPI now includes CORS middleware to allow frontend-to-backend requests.
 	•	✅ All backend routes are mounted under /api prefix (/api/interest).
 	•	✅ Backend responds with JSON { success: true, data: [...] }, which is handled in the React frontend.
+	•	✅ Corrected backend domain mismatch (frontend was pointing to the wrong Railway subdomain—must match deployed backend service exactly).
 
 ⸻
 
