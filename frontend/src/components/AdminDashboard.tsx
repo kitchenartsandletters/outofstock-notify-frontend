@@ -140,6 +140,28 @@ const AdminDashboard = () => {
       <h1 className="text-2xl font-bold mb-4">Out of Stock Request List</h1>
       {loading && <p>Loading...</p>}
       {error && <p className="text-red-600 text-sm">Error: {error}</p>}
+      <div className="mt-4 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+        <input
+          type="text"
+          placeholder="Filter by keyword..."
+          className="border border-gray-300 rounded px-3 py-2 w-full sm:w-64"
+          value={filter}
+          onChange={(e) => setFilter(e.target.value)}
+        />
+        <div className="flex gap-2">
+          <button onClick={exportToCSV} className="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded">
+            Export CSV
+          </button>
+          <button onClick={exportToPDF} className="bg-red-600 hover:bg-red-700 text-white px-4 py-2 rounded">
+            Export PDF
+          </button>
+          <button onClick={window.print} className="bg-gray-600 hover:bg-gray-700 text-white px-4 py-2 rounded">
+            <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 9V2h12v7M6 18h12v4H6v-4zM6 14h12v4H6v-4z" />
+            </svg>
+          </button>
+        </div>
+      </div>
       <table className="w-full table-auto border-collapse border border-gray-300 mt-4 text-sm">
         <thead>
           <tr className="bg-gray-100 text-left">
@@ -213,26 +235,6 @@ const AdminDashboard = () => {
           ))}
         </tbody>
       </table>
-      <div className="mt-4 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
-        <input
-          type="text"
-          placeholder="Filter by keyword..."
-          className="border border-gray-300 rounded px-3 py-2 w-full sm:w-64"
-          value={filter}
-          onChange={(e) => setFilter(e.target.value)}
-        />
-        <div className="flex gap-2">
-          <button onClick={exportToCSV} className="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded">
-            Export CSV
-          </button>
-          <button onClick={exportToPDF} className="bg-red-600 hover:bg-red-700 text-white px-4 py-2 rounded">
-            Export PDF
-          </button>
-          <button onClick={window.print} className="bg-gray-600 hover:bg-gray-700 text-white px-4 py-2 rounded">
-            Print
-          </button>
-        </div>
-      </div>
     </div>
   )
 }
