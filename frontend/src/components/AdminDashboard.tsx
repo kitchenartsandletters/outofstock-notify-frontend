@@ -77,11 +77,25 @@ const AdminDashboard = () => {
   // Sort helper
   const sortedData = [...data].sort((a, b) => {
     if (!sortConfig) return 0
-    const key = sortConfig.key
-    const direction = sortConfig.direction === 'asc' ? 1 : -1
-    const aVal = a[key] ?? ''
-    const bVal = b[key] ?? ''
-    return aVal.toString().localeCompare(bVal.toString()) * direction
+    const { key, direction } = sortConfig
+    const aVal = a[key]
+    const bVal = b[key]
+
+    if (aVal === undefined || bVal === undefined) return 0
+
+    if (typeof aVal === 'string' && typeof bVal === 'string') {
+      return aVal.localeCompare(bVal) * (direction === 'asc' ? 1 : -1)
+    }
+
+    if (aVal instanceof Date && bVal instanceof Date) {
+      return (aVal.getTime() - bVal.getTime()) * (direction === 'asc' ? 1 : -1)
+    }
+
+    if (typeof aVal === 'number' && typeof bVal === 'number') {
+      return (aVal - bVal) * (direction === 'asc' ? 1 : -1)
+    }
+
+    return aVal.toString().localeCompare(bVal.toString()) * (direction === 'asc' ? 1 : -1)
   })
 
   const filteredData = sortedData.filter((entry) =>
