@@ -63,20 +63,15 @@ th {
 }
 
 .admin-dashboard-container {
-  width: 100%;
-  max-width: 600px;
-  margin: auto;
+  width: 100vw;
+  max-width: none;
   padding: 2rem;
   background-color: #ffffff;
   border: 1px solid #dfe3e8;
   box-shadow: 0 2px 8px rgba(33, 43, 54, 0.15);
   border-radius: 12px;
-  position: relative;
-  top: auto;
-  left: auto;
-  transform: none;
-  transition: all 0.3s ease;
   box-sizing: border-box;
+  transition: all 0.3s ease;
 }
 
 input, select, button {
@@ -95,7 +90,6 @@ input, select, button {
 
   .admin-dashboard-container {
     padding: 1rem;
-    width: 100%;
     box-sizing: border-box;
   }
 
