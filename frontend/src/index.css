@@ -121,10 +121,13 @@ input, select, button {
 .control-button {
   width: auto;
   flex-shrink: 0;
+  padding: 10px 14px;
+  border-radius: 4px;
+  font-weight: 200;
+  cursor: pointer;
 }
 
 .control-input {
-  width: auto;
   min-width: 200px;
   flex: 1;
 }
