@@ -56,7 +56,7 @@ const AdminDashboard = () => {
   console.log("Admin dashboard data:", data)
 
   return (
-    <div className="p-6">
+    <div className="admin-dashboard-container">
       <h1 className="text-2xl font-bold mb-4">Out of Stock Request List</h1>
       {loading && <p>Loading...</p>}
       {error && <p className="text-red-600 text-sm">Error: {error}</p>}
