@@ -108,3 +108,23 @@ input, select, button {
     padding: 8px;
   }
 }
+
+.controls-bar {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 1rem;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 1rem;
+}
+
+.control-button {
+  width: auto;
+  flex-shrink: 0;
+}
+
+.control-input {
+  width: auto;
+  min-width: 200px;
+  flex: 1;
+}
