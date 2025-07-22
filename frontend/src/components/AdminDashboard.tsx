@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react'
 import jsPDF from 'jspdf'
-import 'jspdf-autotable'
+import autoTable from 'jspdf-autotable'
 
 
 declare module 'jspdf' {
@@ -16,7 +16,7 @@ function decodeHTMLEntities(str: string) {
 }
 
 type InterestEntry = {
-  request_id?: number
+  cr_id?: string
   email: string
   isbn?: string
   product_id: number
@@ -95,7 +95,7 @@ const AdminDashboard = () => {
   const exportToCSV = () => {
     const headers = ["ID", "Product Title", "ISBN", "Email", "Submitted", "Link"];
     const rows = filteredData.map((entry: InterestEntry) => [
-      `CR${entry.request_id?.toString().padStart(5, "0") || "N/A"}`,
+      `CR${entry.cr_id || "N/A"}`,
       decodeHTMLEntities(entry.product_title),
       entry.isbn || "—",
       entry.email,
@@ -119,7 +119,7 @@ const AdminDashboard = () => {
     const doc = new jsPDF();
     const tableColumn = ["ID", "Product Title", "ISBN", "Email", "Submitted", "Link"];
     const tableRows = filteredData.map((entry: InterestEntry) => [
-      `CR${entry.request_id?.toString().padStart(5, "0") || "N/A"}`,
+      entry.cr_id || "CRN/A",
       decodeHTMLEntities(entry.product_title),
       entry.isbn || "—",
       entry.email,
@@ -146,11 +146,11 @@ const AdminDashboard = () => {
             <th
               className="border px-4 py-2 cursor-pointer"
               onClick={() => {
-                const direction = sortConfig?.key === 'request_id' && sortConfig.direction === 'asc' ? 'desc' : 'asc'
-                setSortConfig({ key: 'request_id', direction })
+                const direction = sortConfig?.key === 'cr_id' && sortConfig.direction === 'asc' ? 'desc' : 'asc'
+                setSortConfig({ key: 'cr_id', direction })
               }}
             >
-              ID {sortConfig?.key === 'request_id' ? (sortConfig.direction === 'asc' ? '▲' : '▼') : ''}
+              ID {sortConfig?.key === 'cr_id' ? (sortConfig.direction === 'asc' ? '▲' : '▼') : ''}
             </th>
             <th
               className="border px-4 py-2 cursor-pointer"
@@ -194,7 +194,7 @@ const AdminDashboard = () => {
         <tbody>
           {filteredData.map((entry, idx) => (
             <tr key={idx} className="border-t">
-              <td className="border px-4 py-2">CR{entry.request_id?.toString().padStart(5, '0') || 'N/A'}</td>
+              <td className="border px-4 py-2">{entry.cr_id || 'CRN/A'}</td>
               <td className="border px-4 py-2">{decodeHTMLEntities(entry.product_title)}</td>
               <td className="border px-4 py-2">{entry.isbn || '—'}</td>
               <td className="border px-4 py-2">{entry.email}</td>
