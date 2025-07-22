@@ -57,7 +57,7 @@ const AdminDashboard = () => {
 
   return (
     <div className="p-6">
-      <h1 className="text-2xl font-bold mb-4">Restock Interest Requests</h1>
+      <h1 className="text-2xl font-bold mb-4">Out of Stock Request List</h1>
       {loading && <p>Loading...</p>}
       {error && <p className="text-red-600 text-sm">Error: {error}</p>}
       <table className="w-full table-auto border-collapse border border-gray-300 mt-4 text-sm">
