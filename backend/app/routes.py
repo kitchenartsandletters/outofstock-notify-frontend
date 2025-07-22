@@ -37,7 +37,3 @@ async def get_interest_entries(token: str = ""):
         return {"success": True, "data": result.data}
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
-    
-@app.get("/")
-async def root():
-    return {"message": "Server is live"}
