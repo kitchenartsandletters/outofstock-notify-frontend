@@ -30,6 +30,7 @@ const AdminDashboard = () => {
   const [error, setError] = useState<string | null>(null)
   const [sortConfig, setSortConfig] = useState<{ key: keyof InterestEntry; direction: 'asc' | 'desc' } | null>(null)
   const [filter, setFilter] = useState("")
+  const [isDarkMode, setIsDarkMode] = useState(false)
 
   useEffect(() => {
     const fetchData = async () => {
@@ -157,7 +158,18 @@ const AdminDashboard = () => {
   };
 
   return (
-    <div className="admin-dashboard-container">
+    <div className={`admin-dashboard-container ${isDarkMode ? 'dark-mode' : ''}`}>
+      <div className="mb-2">
+        <label className="inline-flex items-center space-x-2">
+          <input
+            type="checkbox"
+            checked={isDarkMode}
+            onChange={() => setIsDarkMode(!isDarkMode)}
+            className="form-checkbox"
+          />
+          <span>Dark Mode</span>
+        </label>
+      </div>
       <h1 className="text-2xl font-bold mb-4">Out of Stock Request List</h1>
       {loading && <p>Loading...</p>}
       {error && <p className="text-red-600 text-sm">Error: {error}</p>}
