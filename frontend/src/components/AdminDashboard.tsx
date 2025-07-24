@@ -81,7 +81,11 @@ const AdminDashboard = () => {
     const aVal = a[key]
     const bVal = b[key]
 
-    if (aVal === undefined || bVal === undefined) return 0
+    if (aVal == null || bVal == null) return 0;
+
+    if (key === 'cr_id') {
+      return aVal.toString().localeCompare(bVal.toString()) * (direction === 'asc' ? 1 : -1);
+    }
 
     if (typeof aVal === 'string' && typeof bVal === 'string') {
       return aVal.localeCompare(bVal) * (direction === 'asc' ? 1 : -1)
@@ -210,20 +214,7 @@ const AdminDashboard = () => {
                   : '⇅'}
               </span>
             </th>
-            <th
-              className="border px-4 py-2 cursor-pointer"
-              onClick={() => {
-                const direction = sortConfig?.key === 'isbn' && sortConfig.direction === 'asc' ? 'desc' : 'asc'
-                setSortConfig({ key: 'isbn', direction })
-              }}
-            >
-              ISBN{" "}
-              <span style={{ marginLeft: "0.25em" }}>
-                {sortConfig?.key === 'isbn'
-                  ? (sortConfig.direction === 'asc' ? '▲' : '▼')
-                  : '⇅'}
-              </span>
-            </th>
+            <th className="border px-4 py-2">ISBN</th>
             <th
               className="border px-4 py-2 cursor-pointer"
               onClick={() => {
