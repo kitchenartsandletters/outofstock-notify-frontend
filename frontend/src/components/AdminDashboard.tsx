@@ -87,8 +87,11 @@ const AdminDashboard = () => {
       return aVal.localeCompare(bVal) * (direction === 'asc' ? 1 : -1)
     }
 
-    if (aVal instanceof Date && bVal instanceof Date) {
-      return (aVal.getTime() - bVal.getTime()) * (direction === 'asc' ? 1 : -1)
+    // Safer date comparison for created_at field
+    if (key === 'created_at') {
+      const aDate = Date.parse(aVal as string);
+      const bDate = Date.parse(bVal as string);
+      return (aDate - bDate) * (direction === 'asc' ? 1 : -1);
     }
 
     if (typeof aVal === 'number' && typeof bVal === 'number') {
@@ -186,7 +189,12 @@ const AdminDashboard = () => {
                 setSortConfig({ key: 'cr_id', direction })
               }}
             >
-              ID {sortConfig?.key === 'cr_id' ? (sortConfig.direction === 'asc' ? '▲' : '▼') : ''}
+              ID{" "}
+              <span style={{ marginLeft: "0.25em" }}>
+                {sortConfig?.key === 'cr_id'
+                  ? (sortConfig.direction === 'asc' ? '▲' : '▼')
+                  : '⇅'}
+              </span>
             </th>
             <th
               className="border px-4 py-2 cursor-pointer"
@@ -195,7 +203,12 @@ const AdminDashboard = () => {
                 setSortConfig({ key: 'product_title', direction })
               }}
             >
-              Product Title {sortConfig?.key === 'product_title' ? (sortConfig.direction === 'asc' ? '▲' : '▼') : ''}
+              Product Title{" "}
+              <span style={{ marginLeft: "0.25em" }}>
+                {sortConfig?.key === 'product_title'
+                  ? (sortConfig.direction === 'asc' ? '▲' : '▼')
+                  : '⇅'}
+              </span>
             </th>
             <th
               className="border px-4 py-2 cursor-pointer"
@@ -204,7 +217,12 @@ const AdminDashboard = () => {
                 setSortConfig({ key: 'isbn', direction })
               }}
             >
-              ISBN {sortConfig?.key === 'isbn' ? (sortConfig.direction === 'asc' ? '▲' : '▼') : ''}
+              ISBN{" "}
+              <span style={{ marginLeft: "0.25em" }}>
+                {sortConfig?.key === 'isbn'
+                  ? (sortConfig.direction === 'asc' ? '▲' : '▼')
+                  : '⇅'}
+              </span>
             </th>
             <th
               className="border px-4 py-2 cursor-pointer"
@@ -213,7 +231,12 @@ const AdminDashboard = () => {
                 setSortConfig({ key: 'email', direction })
               }}
             >
-              Email {sortConfig?.key === 'email' ? (sortConfig.direction === 'asc' ? '▲' : '▼') : ''}
+              Email{" "}
+              <span style={{ marginLeft: "0.25em" }}>
+                {sortConfig?.key === 'email'
+                  ? (sortConfig.direction === 'asc' ? '▲' : '▼')
+                  : '⇅'}
+              </span>
             </th>
             <th
               className="border px-4 py-2 cursor-pointer"
@@ -222,7 +245,12 @@ const AdminDashboard = () => {
                 setSortConfig({ key: 'created_at', direction })
               }}
             >
-              Submitted {sortConfig?.key === 'created_at' ? (sortConfig.direction === 'asc' ? '▲' : '▼') : ''}
+              Submitted{" "}
+              <span style={{ marginLeft: "0.25em" }}>
+                {sortConfig?.key === 'created_at'
+                  ? (sortConfig.direction === 'asc' ? '▲' : '▼')
+                  : '⇅'}
+              </span>
             </th>
             <th className="border px-4 py-2">Link</th>
           </tr>
