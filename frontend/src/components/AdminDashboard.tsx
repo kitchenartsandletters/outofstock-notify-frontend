@@ -187,7 +187,7 @@ const AdminDashboard = () => {
         <thead>
           <tr className="bg-gray-100 text-left">
             <th
-              className="border px-4 py-2 cursor-pointer"
+              className={`border px-4 py-2 cursor-pointer ${sortConfig?.key === 'cr_id' ? (sortConfig.direction === 'asc' ? 'sorted-asc' : 'sorted-desc') : ''}`}
               onClick={() => {
                 const direction = sortConfig?.key === 'cr_id' && sortConfig.direction === 'asc' ? 'desc' : 'asc'
                 setSortConfig({ key: 'cr_id', direction })
@@ -201,7 +201,7 @@ const AdminDashboard = () => {
               </span>
             </th>
             <th
-              className="border px-4 py-2 cursor-pointer"
+              className={`border px-4 py-2 cursor-pointer ${sortConfig?.key === 'product_title' ? (sortConfig.direction === 'asc' ? 'sorted-asc' : 'sorted-desc') : ''}`}
               onClick={() => {
                 const direction = sortConfig?.key === 'product_title' && sortConfig.direction === 'asc' ? 'desc' : 'asc'
                 setSortConfig({ key: 'product_title', direction })
@@ -216,7 +216,7 @@ const AdminDashboard = () => {
             </th>
             <th className="border px-4 py-2">ISBN</th>
             <th
-              className="border px-4 py-2 cursor-pointer"
+              className={`border px-4 py-2 cursor-pointer ${sortConfig?.key === 'email' ? (sortConfig.direction === 'asc' ? 'sorted-asc' : 'sorted-desc') : ''}`}
               onClick={() => {
                 const direction = sortConfig?.key === 'email' && sortConfig.direction === 'asc' ? 'desc' : 'asc'
                 setSortConfig({ key: 'email', direction })
@@ -230,7 +230,7 @@ const AdminDashboard = () => {
               </span>
             </th>
             <th
-              className="border px-4 py-2 cursor-pointer"
+              className={`border px-4 py-2 cursor-pointer ${sortConfig?.key === 'created_at' ? (sortConfig.direction === 'asc' ? 'sorted-asc' : 'sorted-desc') : ''}`}
               onClick={() => {
                 const direction = sortConfig?.key === 'created_at' && sortConfig.direction === 'asc' ? 'desc' : 'asc'
                 setSortConfig({ key: 'created_at', direction })

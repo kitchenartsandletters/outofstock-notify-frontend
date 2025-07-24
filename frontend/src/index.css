@@ -131,3 +131,9 @@ input, select, button {
   min-width: 200px;
   flex: 1;
 }
+.sorted-asc,
+.sorted-desc {
+  background-color: #e3f1eb;
+  color: #008060;
+  font-weight: bold;
+}
