@@ -164,7 +164,9 @@ const AdminDashboard = () => {
           <input
             type="checkbox"
             checked={isDarkMode}
-            onChange={() => setIsDarkMode(!isDarkMode)}
+            onChange={() => {
+              document.body.classList.toggle('dark-mode');
+            }}
             className="form-checkbox"
           />
           <span>Dark Mode</span>
