@@ -165,7 +165,13 @@ const AdminDashboard = () => {
             type="checkbox"
             checked={isDarkMode}
             onChange={() => {
-              document.body.classList.toggle('dark-mode');
+              const nextMode = !isDarkMode;
+              setIsDarkMode(nextMode);
+              if (nextMode) {
+                document.body.classList.add('dark-mode');
+              } else {
+                document.body.classList.remove('dark-mode');
+              }
             }}
             className="form-checkbox"
           />
