@@ -50,7 +50,7 @@ const AdminDashboard = () => {
   const toggleDarkMode = () => {
     setIsDarkMode(prev => {
       const newValue = !prev;
-      localStorage.setItem('theme', newValue ? 'dark' : 'light');
+      localStorage.setItem('theme', isDarkMode ? 'dark' : 'light');
       return newValue;
     });
   };
