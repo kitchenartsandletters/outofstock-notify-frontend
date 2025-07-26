@@ -121,7 +121,7 @@ th {
   transition: all 0.3s ease;
 }
 
-input, select, button {
+/*input, select, button {
   width: 100%;
   box-sizing: border-box;
 }
@@ -153,7 +153,7 @@ input, select, button {
     font-size: 10px;
     padding: 8px;
   }
-}
+}*/
 
 .controls-bar {
   display: flex;
