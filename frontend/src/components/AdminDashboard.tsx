@@ -1,4 +1,5 @@
 import { useEffect, useState } from 'react'
+import FilterControls, { FilterControlsProps } from './FilterControls';
 import jsPDF from 'jspdf'
 import autoTable from 'jspdf-autotable'
 import DarkModeToggle from './DarkModeToggle';
@@ -33,6 +34,13 @@ const AdminDashboard = () => {
   const [sortConfig, setSortConfig] = useState<{ key: keyof InterestEntry; direction: 'asc' | 'desc' } | null>(null)
   const [filterText, setFilterText] = useState("")
   const [isDarkMode, setIsDarkMode] = useState(false)
+  const [selectedFilter, setSelectedFilter] = useState('all');
+
+  const handleFilterChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
+    setSelectedFilter(e.target.value);
+  };
+
+  const filterOptions = ['all', 'urgent', 'low stock', 'archived'];
 
   useEffect(() => {
     const fetchData = async () => {
@@ -172,12 +180,10 @@ const AdminDashboard = () => {
       {error && <p className="text-red-600 text-sm">Error: {error}</p>}
       {/* Filter and export controls */}
       <div className="flex flex-col md:flex-row md:items-center md:justify-between mb-4 gap-4">
-        <input
-          type="text"
-          placeholder="Filter by Title or Email"
-          value={filterText}
-          onChange={(e) => setFilterText(e.target.value)}
-          className="px-4 py-2 border rounded-md w-full md:w-1/3 dark:bg-gray-800 dark:text-white dark:border-gray-700"
+        <FilterControls
+          selectedFilter={selectedFilter}
+          handleFilterChange={handleFilterChange}
+          filterOptions={filterOptions}
         />
         <div className="flex flex-wrap gap-2 justify-end">
           <button onClick={handleExportCSV} className="px-4 py-2 bg-blue-500 text-white rounded hover:bg-blue-600">Export CSV</button>
