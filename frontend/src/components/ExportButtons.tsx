@@ -61,14 +61,14 @@ export default function ExportButtons({ filteredData }: ExportButtonsProps) {
   };
 
   return (
-    <div className="flex flex-wrap gap-2 justify-end w-full md:w-1/4">
-      <button onClick={handleExportCSV} className="px-4 py-2 bg-blue-500 text-white rounded hover:bg-blue-600 w-full md:w-auto">
+    <div className="flex flex-nowrap justify-end w-full mb-[10px] gap-[0.2rem]">
+      <button onClick={handleExportCSV} className="px-4 py-2 bg-blue-500 text-white rounded hover:bg-blue-600">
         Export CSV
       </button>
-      <button onClick={handleExportPDF} className="px-4 py-2 bg-green-500 text-white rounded hover:bg-green-600 w-full md:w-auto">
+      <button onClick={handleExportPDF} className="px-4 py-2 bg-green-500 text-white rounded hover:bg-green-600">
         Export PDF
       </button>
-      <button onClick={handlePrint} className="px-4 py-2 bg-gray-500 text-white rounded hover:bg-gray-600 w-full md:w-auto">
+      <button onClick={handlePrint} className="px-4 py-2 bg-gray-500 text-white rounded hover:bg-gray-600">
         🖨️
       </button>
     </div>
