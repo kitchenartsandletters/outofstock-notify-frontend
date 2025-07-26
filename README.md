@@ -4,6 +4,31 @@ This project enables customers to express interest in out-of-stock products, and
 
 ⸻
 
+🌗 Dark Mode Support
+
+The admin dashboard now supports dark mode via Tailwind CSS and a custom toggle component.
+
+✅ Installation Lessons Learned
+- Tailwind CSS setup must match the correct syntax and module format for your environment (e.g., use `.cjs` extensions for `tailwind.config.cjs` and `postcss.config.cjs` when using CommonJS).
+- Always wrap Tailwind install commands in quotes when using Zsh to avoid shell expansion errors, e.g.:
+  ```sh
+  npm install -D "tailwindcss@^3.4" "postcss@^8.4" "autoprefixer@^10.4"
+  ```
+- If `npx tailwindcss` fails with "could not determine executable to run", prefer cleaning the project and reinstalling:
+  ```sh
+  rm -rf node_modules package-lock.json dist .vite
+  npm cache clean --force
+  npm install
+  ```
+
+✅ How Dark Mode Toggle Renders
+- The `DarkModeToggle.tsx` component uses Tailwind's `dark:` class utility.
+- The component toggles the `dark` class on the `html` element to trigger dark mode styling.
+- Theme-based utility classes are applied directly via Tailwind (e.g., `bg-white dark:bg-gray-900`).
+- No additional CSS frameworks or external styles are used—just Tailwind.
+
+This ensures a minimal, scalable dark mode implementation across the app.
+
 ✅ Project Overview
 
 This full-stack system consists of:
