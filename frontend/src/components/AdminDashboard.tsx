@@ -160,23 +160,27 @@ const AdminDashboard = () => {
   return (
     <div className={`admin-dashboard-container ${isDarkMode ? 'dark-mode' : ''}`}>
       <div className="mb-2">
-        <label className="inline-flex items-center space-x-2">
-          <input
-            type="checkbox"
-            checked={isDarkMode}
-            onChange={() => {
-              const nextMode = !isDarkMode;
-              setIsDarkMode(nextMode);
-              if (nextMode) {
-                document.body.classList.add('dark-mode');
-              } else {
-                document.body.classList.remove('dark-mode');
-              }
-            }}
-            className="form-checkbox"
-          />
-          <span>Dark Mode</span>
-        </label>
+        <div
+          className="relative inline-flex items-center cursor-pointer"
+          onClick={() => {
+            const nextMode = !isDarkMode;
+            setIsDarkMode(nextMode);
+            if (nextMode) {
+              document.body.classList.add('dark-mode');
+            } else {
+              document.body.classList.remove('dark-mode');
+            }
+          }}
+        >
+          <span className="mr-2">Dark Mode</span>
+          <div className={`w-11 h-6 flex items-center bg-gray-300 rounded-full p-1 ${isDarkMode ? 'bg-green-500' : ''}`}>
+            <div
+              className={`bg-white w-4 h-4 rounded-full shadow-md transform duration-300 ease-in-out ${
+                isDarkMode ? 'translate-x-5' : ''
+              }`}
+            />
+          </div>
+        </div>
       </div>
       <h1 className="text-2xl font-bold mb-4">Out of Stock Request List</h1>
       {loading && <p>Loading...</p>}
