@@ -123,7 +123,8 @@ const AdminDashboard = () => {
 
   const filteredItems = data.filter(item =>
     item.product_title.toLowerCase().includes(selectedFilter.toLowerCase()) ||
-    item.email.toLowerCase().includes(selectedFilter.toLowerCase())
+    item.email.toLowerCase().includes(selectedFilter.toLowerCase()) ||
+    item.cr_id?.toLowerCase().includes(selectedFilter.toLowerCase())
   );
 
   // Export CSV

@@ -13,7 +13,7 @@ const FilterControls: React.FC<FilterControlsProps> = ({
     <div className="mb-4">
       <input
         type="text"
-        placeholder="Filter by title or author..."
+        placeholder="Filter by title, email or ID..."
         value={selectedFilter}
         onChange={handleFilterChange}
         className="px-4 py-2 border border-gray-300 rounded w-full dark:bg-gray-800 dark:text-white dark:border-gray-600"
