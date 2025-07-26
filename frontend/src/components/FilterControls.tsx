@@ -3,7 +3,6 @@ import React, { ChangeEvent } from 'react';
 export interface FilterControlsProps {
   selectedFilter: string;
   handleFilterChange: (e: ChangeEvent<HTMLInputElement>) => void;
-  filterOptions: string[];
 }
 
 const FilterControls: React.FC<FilterControlsProps> = ({

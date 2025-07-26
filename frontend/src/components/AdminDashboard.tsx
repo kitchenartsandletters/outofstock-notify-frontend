@@ -34,14 +34,12 @@ const AdminDashboard = () => {
   const [sortConfig, setSortConfig] = useState<{ key: keyof InterestEntry; direction: 'asc' | 'desc' } | null>(null)
   const [filterText, setFilterText] = useState("")
   const [isDarkMode, setIsDarkMode] = useState(false)
-  const [selectedFilter, setSelectedFilter] = useState('all');
+  const [selectedFilter, setSelectedFilter] = useState('');
 
   const handleFilterChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     setSelectedFilter(e.target.value);
   };
-
-  const filterOptions = ['all', 'urgent', 'low stock', 'archived'];
-
+  
   useEffect(() => {
     const fetchData = async () => {
       try {
@@ -123,6 +121,11 @@ const AdminDashboard = () => {
       .includes(filterText.toLowerCase())
   )
 
+  const filteredItems = data.filter(item =>
+    item.product_title.toLowerCase().includes(selectedFilter.toLowerCase()) ||
+    item.email.toLowerCase().includes(selectedFilter.toLowerCase())
+  );
+
   // Export CSV
   const handleExportCSV = () => {
     const headers = ["ID", "Product Title", "ISBN", "Email", "Submitted", "Link"];
@@ -180,11 +183,6 @@ const AdminDashboard = () => {
       {error && <p className="text-red-600 text-sm">Error: {error}</p>}
       {/* Filter and export controls */}
       <div className="flex flex-col md:flex-row md:items-center md:justify-between mb-4 gap-4">
-        <FilterControls
-          selectedFilter={selectedFilter}
-          handleFilterChange={handleFilterChange}
-          filterOptions={filterOptions}
-        />
         <div className="flex flex-wrap gap-2 justify-end">
           <button onClick={handleExportCSV} className="px-4 py-2 bg-blue-500 text-white rounded hover:bg-blue-600">Export CSV</button>
           <button onClick={handleExportPDF} className="px-4 py-2 bg-green-500 text-white rounded hover:bg-green-600">Export PDF</button>
@@ -204,7 +202,7 @@ const AdminDashboard = () => {
             </tr>
           </thead>
           <tbody>
-            {filteredData.map((entry, index) => (
+            {filteredItems.map((entry, index) => (
               <tr key={index} className="even:bg-gray-50 dark:even:bg-gray-700">
                 <td className="border px-4 py-2 dark:border-gray-700">{entry.cr_id || 'CRN/A'}</td>
                 <td className="border px-4 py-2 dark:border-gray-700">{entry.product_id}</td>
