@@ -48,10 +48,18 @@ const AdminDashboard = () => {
   }, [isDarkMode]);
 
   const toggleDarkMode = () => {
-    const newTheme = isDarkMode ? 'light' : 'dark';
-    localStorage.setItem('theme', newTheme);
-    document.documentElement.classList.toggle('dark');
-    setIsDarkMode(!isDarkMode);
+    setIsDarkMode(prev => {
+      const newTheme = prev ? 'light' : 'dark';
+      localStorage.setItem('theme', newTheme);
+
+      if (newTheme === 'dark') {
+        document.documentElement.classList.add('dark');
+      } else {
+        document.documentElement.classList.remove('dark');
+      }
+
+      return !prev;
+    });
   };
 
   const handleFilterChange = (e: React.ChangeEvent<HTMLInputElement>) => {
