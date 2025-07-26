@@ -1,37 +1,24 @@
-import React from 'react';
+import React, { ChangeEvent } from 'react';
 
 export interface FilterControlsProps {
   selectedFilter: string;
-  handleFilterChange: (e: React.ChangeEvent<HTMLSelectElement>) => void;
+  handleFilterChange: (e: ChangeEvent<HTMLInputElement>) => void;
   filterOptions: string[];
 }
 
 const FilterControls: React.FC<FilterControlsProps> = ({
   selectedFilter,
   handleFilterChange,
-  filterOptions,
 }) => {
   return (
-    <div className="flex flex-wrap items-center gap-4 mb-4">
-      <label htmlFor="statusFilter" className="text-sm font-medium text-gray-700 dark:text-gray-300">
-        Filter by status:
-      </label>
-      <select
-        id="statusFilter"
+    <div className="mb-4">
+      <input
+        type="text"
+        placeholder="Filter by title or author..."
         value={selectedFilter}
         onChange={handleFilterChange}
-        className="px-3 py-1 rounded border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800 text-sm dark:text-white"
-      >
-        {filterOptions.map((option) => (
-          <option key={option} value={option}>
-            {option === 'all'
-              ? 'All'
-              : option
-                  .replace('_', ' ')
-                  .replace(/\b\w/g, (c) => c.toUpperCase())}
-          </option>
-        ))}
-      </select>
+        className="px-4 py-2 border border-gray-300 rounded w-full dark:bg-gray-800 dark:text-white dark:border-gray-600"
+      />
     </div>
   );
 };

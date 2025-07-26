@@ -36,7 +36,7 @@ const AdminDashboard = () => {
   const [isDarkMode, setIsDarkMode] = useState(false)
   const [selectedFilter, setSelectedFilter] = useState('all');
 
-  const handleFilterChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
+  const handleFilterChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     setSelectedFilter(e.target.value);
   };
 
