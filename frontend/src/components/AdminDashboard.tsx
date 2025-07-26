@@ -33,8 +33,27 @@ const AdminDashboard = () => {
   const [error, setError] = useState<string | null>(null)
   const [sortConfig, setSortConfig] = useState<{ key: keyof InterestEntry; direction: 'asc' | 'desc' } | null>(null)
   const [filterText, setFilterText] = useState("")
-  const [isDarkMode, setIsDarkMode] = useState(false)
+  const [isDarkMode, setIsDarkMode] = useState(() => {
+    const stored = localStorage.getItem('theme');
+    return stored === 'dark';
+  });
   const [selectedFilter, setSelectedFilter] = useState('');
+
+  useEffect(() => {
+    if (isDarkMode) {
+      document.documentElement.classList.add('dark');
+    } else {
+      document.documentElement.classList.remove('dark');
+    }
+  }, [isDarkMode]);
+
+  const toggleDarkMode = () => {
+    setIsDarkMode(prev => {
+      const newValue = !prev;
+      localStorage.setItem('theme', newValue ? 'dark' : 'light');
+      return newValue;
+    });
+  };
 
   const handleFilterChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     setSelectedFilter(e.target.value);
@@ -178,7 +197,7 @@ const AdminDashboard = () => {
   return (
     <div className={`p-6 bg-white dark:bg-gray-900 min-h-screen`}>
       <DashboardHeader>
-        <DarkModeToggle />
+        <DarkModeToggle isDarkMode={isDarkMode} setIsDarkMode={setIsDarkMode} />
       </DashboardHeader>
       {loading && <p>Loading...</p>}
       {error && <p className="text-red-600 text-sm">Error: {error}</p>}

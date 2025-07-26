@@ -1,13 +1,11 @@
-import { useState, useEffect } from 'react';
+import { Dispatch, SetStateAction } from 'react';
 
-const DarkModeToggle = () => {
-  const [isDarkMode, setIsDarkMode] = useState(false);
+interface DarkModeToggleProps {
+  isDarkMode: boolean;
+  setIsDarkMode: Dispatch<SetStateAction<boolean>>;
+}
 
-
-  useEffect(() => {
-    document.documentElement.classList.toggle('dark', isDarkMode);
-  }, [isDarkMode]);
-
+const DarkModeToggle = ({ isDarkMode, setIsDarkMode }: DarkModeToggleProps) => {
   return (
     <label className="flex items-center cursor-pointer">
       <span className="mr-2 text-sm text-gray-700 dark:text-gray-200">Dark Mode</span>
