@@ -4,7 +4,7 @@ import jsPDF from 'jspdf'
 import autoTable from 'jspdf-autotable'
 import DarkModeToggle from './DarkModeToggle';
 import DashboardHeader from './DashboardHeader';
-
+import ExportButtons from "./ExportButtons";
 
 declare module 'jspdf' {
   interface jsPDF {
@@ -183,13 +183,10 @@ const AdminDashboard = () => {
       {loading && <p>Loading...</p>}
       {error && <p className="text-red-600 text-sm">Error: {error}</p>}
       {/* Filter and export controls */}
-      <div className="flex flex-col md:flex-row md:items-center md:justify-between mb-4 gap-4">
-        <div className="flex flex-wrap gap-2 justify-end">
-          <button onClick={handleExportCSV} className="px-4 py-2 bg-blue-500 text-white rounded hover:bg-blue-600">Export CSV</button>
-          <button onClick={handleExportPDF} className="px-4 py-2 bg-green-500 text-white rounded hover:bg-green-600">Export PDF</button>
-          <button onClick={handlePrint} className="px-4 py-2 bg-gray-500 text-white rounded hover:bg-gray-600">🖨️</button>
-        </div>
-      </div>
+      <ExportButtons
+        filteredData={filteredData}
+        decodeHTMLEntities={decodeHTMLEntities}
+      />
       {/* FilterControls and Table */}
       <FilterControls
         selectedFilter={selectedFilter}
