@@ -1,6 +1,8 @@
 import { useEffect, useState } from 'react'
 import jsPDF from 'jspdf'
 import autoTable from 'jspdf-autotable'
+import DarkModeToggle from './DarkModeToggle';
+import DashboardHeader from './DashboardHeader';
 
 
 declare module 'jspdf' {
@@ -29,7 +31,7 @@ const AdminDashboard = () => {
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
   const [sortConfig, setSortConfig] = useState<{ key: keyof InterestEntry; direction: 'asc' | 'desc' } | null>(null)
-  const [filter, setFilter] = useState("")
+  const [filterText, setFilterText] = useState("")
   const [isDarkMode, setIsDarkMode] = useState(false)
 
   useEffect(() => {
@@ -110,11 +112,11 @@ const AdminDashboard = () => {
     Object.values(entry)
       .join(" ")
       .toLowerCase()
-      .includes(filter.toLowerCase())
+      .includes(filterText.toLowerCase())
   )
 
   // Export CSV
-  const exportToCSV = () => {
+  const handleExportCSV = () => {
     const headers = ["ID", "Product Title", "ISBN", "Email", "Submitted", "Link"];
     const rows = filteredData.map((entry: InterestEntry) => [
       `CR${entry.cr_id || "N/A"}`,
@@ -137,7 +139,7 @@ const AdminDashboard = () => {
   };
 
   // Export PDF
-  const exportToPDF = () => {
+  const handleExportPDF = () => {
     const doc = new jsPDF();
     const tableColumn = ["ID", "Product Title", "ISBN", "Email", "Submitted", "Link"];
     const tableRows = filteredData.map((entry: InterestEntry) => [
@@ -157,141 +159,57 @@ const AdminDashboard = () => {
     doc.save("customer_requests.pdf");
   };
 
+  const handlePrint = () => {
+    window.print();
+  };
+
   return (
-    <div className={`admin-dashboard-container ${isDarkMode ? 'dark-mode' : ''}`}>
-      <div className="mb-2">
-        <div
-          className="relative inline-flex items-center cursor-pointer"
-          onClick={() => {
-            const nextMode = !isDarkMode;
-            setIsDarkMode(nextMode);
-            if (nextMode) {
-              document.body.classList.add('dark-mode');
-            } else {
-              document.body.classList.remove('dark-mode');
-            }
-          }}
-        >
-          <span className="mr-2">Dark Mode</span>
-          <div className={`w-11 h-6 flex items-center bg-gray-300 rounded-full p-1 ${isDarkMode ? 'bg-green-500' : ''}`}>
-            <div
-              className={`bg-white w-4 h-4 rounded-full shadow-md transform duration-300 ease-in-out ${
-                isDarkMode ? 'translate-x-5' : ''
-              }`}
-            />
-          </div>
-        </div>
-      </div>
-      <h1 className="text-2xl font-bold mb-4">Out of Stock Request List</h1>
+    <div className={`p-6 bg-white dark:bg-gray-900 min-h-screen`}>
+      <DashboardHeader>
+        <DarkModeToggle />
+      </DashboardHeader>
       {loading && <p>Loading...</p>}
       {error && <p className="text-red-600 text-sm">Error: {error}</p>}
-      <div className="controls-bar">
+      {/* Filter and export controls */}
+      <div className="flex flex-col md:flex-row md:items-center md:justify-between mb-4 gap-4">
         <input
           type="text"
-          placeholder="Filter by keyword..."
-          className="control-input"
-          value={filter}
-          onChange={(e) => setFilter(e.target.value)}
+          placeholder="Filter by Title or Email"
+          value={filterText}
+          onChange={(e) => setFilterText(e.target.value)}
+          className="px-4 py-2 border rounded-md w-full md:w-1/3 dark:bg-gray-800 dark:text-white dark:border-gray-700"
         />
-        <div className="flex gap-2">
-          <button onClick={exportToCSV} className="control-button">
-            Export CSV
-          </button>
-          <button onClick={exportToPDF} className="control-button">
-            Export PDF
-          </button>
-          <button onClick={window.print} className="control-button">
-            <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 9V2h12v7M6 18h12v4H6v-4zM6 14h12v4H6v-4z" />
-            </svg>
-          </button>
+        <div className="flex flex-wrap gap-2 justify-end">
+          <button onClick={handleExportCSV} className="px-4 py-2 bg-blue-500 text-white rounded hover:bg-blue-600">Export CSV</button>
+          <button onClick={handleExportPDF} className="px-4 py-2 bg-green-500 text-white rounded hover:bg-green-600">Export PDF</button>
+          <button onClick={handlePrint} className="px-4 py-2 bg-gray-500 text-white rounded hover:bg-gray-600">🖨️</button>
         </div>
       </div>
-      <table className="w-full table-auto border-collapse border border-gray-300 mt-4 text-sm">
-        <thead>
-          <tr className="bg-gray-100 text-left">
-            <th
-              className={`border px-4 py-2 cursor-pointer ${sortConfig?.key === 'cr_id' ? (sortConfig.direction === 'asc' ? 'sorted-asc' : 'sorted-desc') : ''}`}
-              onClick={() => {
-                const direction = sortConfig?.key === 'cr_id' && sortConfig.direction === 'asc' ? 'desc' : 'asc'
-                setSortConfig({ key: 'cr_id', direction })
-              }}
-            >
-              ID{" "}
-              <span style={{ marginLeft: "0.25em" }}>
-                {sortConfig?.key === 'cr_id'
-                  ? (sortConfig.direction === 'asc' ? '▲' : '▼')
-                  : '⇅'}
-              </span>
-            </th>
-            <th
-              className={`border px-4 py-2 cursor-pointer ${sortConfig?.key === 'product_title' ? (sortConfig.direction === 'asc' ? 'sorted-asc' : 'sorted-desc') : ''}`}
-              onClick={() => {
-                const direction = sortConfig?.key === 'product_title' && sortConfig.direction === 'asc' ? 'desc' : 'asc'
-                setSortConfig({ key: 'product_title', direction })
-              }}
-            >
-              Product Title{" "}
-              <span style={{ marginLeft: "0.25em" }}>
-                {sortConfig?.key === 'product_title'
-                  ? (sortConfig.direction === 'asc' ? '▲' : '▼')
-                  : '⇅'}
-              </span>
-            </th>
-            <th className="border px-4 py-2">ISBN</th>
-            <th
-              className={`border px-4 py-2 cursor-pointer ${sortConfig?.key === 'email' ? (sortConfig.direction === 'asc' ? 'sorted-asc' : 'sorted-desc') : ''}`}
-              onClick={() => {
-                const direction = sortConfig?.key === 'email' && sortConfig.direction === 'asc' ? 'desc' : 'asc'
-                setSortConfig({ key: 'email', direction })
-              }}
-            >
-              Email{" "}
-              <span style={{ marginLeft: "0.25em" }}>
-                {sortConfig?.key === 'email'
-                  ? (sortConfig.direction === 'asc' ? '▲' : '▼')
-                  : '⇅'}
-              </span>
-            </th>
-            <th
-              className={`border px-4 py-2 cursor-pointer ${sortConfig?.key === 'created_at' ? (sortConfig.direction === 'asc' ? 'sorted-asc' : 'sorted-desc') : ''}`}
-              onClick={() => {
-                const direction = sortConfig?.key === 'created_at' && sortConfig.direction === 'asc' ? 'desc' : 'asc'
-                setSortConfig({ key: 'created_at', direction })
-              }}
-            >
-              Submitted{" "}
-              <span style={{ marginLeft: "0.25em" }}>
-                {sortConfig?.key === 'created_at'
-                  ? (sortConfig.direction === 'asc' ? '▲' : '▼')
-                  : '⇅'}
-              </span>
-            </th>
-            <th className="border px-4 py-2">Link</th>
-          </tr>
-        </thead>
-        <tbody>
-          {filteredData.map((entry, idx) => (
-            <tr key={idx} className="border-t">
-              <td className="border px-4 py-2">{entry.cr_id || 'CRN/A'}</td>
-              <td className="border px-4 py-2">{decodeHTMLEntities(entry.product_title)}</td>
-              <td className="border px-4 py-2">{entry.isbn || '—'}</td>
-              <td className="border px-4 py-2">{entry.email}</td>
-              <td className="border px-4 py-2">{new Date(entry.created_at).toLocaleString()}</td>
-              <td className="border px-4 py-2">
-                <a
-                  href={`https://admin.shopify.com/store/castironbooks/products/${entry.product_id}`}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="text-blue-600 underline"
-                >
-                  View
-                </a>
-              </td>
+      {/* Table */}
+      <div className="overflow-x-auto">
+        <table className="min-w-full border-collapse border border-gray-200 dark:border-gray-700">
+          <thead className="bg-gray-100 dark:bg-gray-800">
+            <tr>
+              <th className="border px-4 py-2 dark:border-gray-700 text-left">ID</th>
+              <th className="border px-4 py-2 dark:border-gray-700 text-left">Product ID</th>
+              <th className="border px-4 py-2 dark:border-gray-700 text-left">Product Title</th>
+              <th className="border px-4 py-2 dark:border-gray-700 text-left">Email</th>
+              <th className="border px-4 py-2 dark:border-gray-700 text-left">Created At</th>
             </tr>
-          ))}
-        </tbody>
-      </table>
+          </thead>
+          <tbody>
+            {filteredData.map((entry, index) => (
+              <tr key={index} className="even:bg-gray-50 dark:even:bg-gray-700">
+                <td className="border px-4 py-2 dark:border-gray-700">{entry.cr_id || 'CRN/A'}</td>
+                <td className="border px-4 py-2 dark:border-gray-700">{entry.product_id}</td>
+                <td className="border px-4 py-2 dark:border-gray-700">{decodeHTMLEntities(entry.product_title)}</td>
+                <td className="border px-4 py-2 dark:border-gray-700">{entry.email}</td>
+                <td className="border px-4 py-2 dark:border-gray-700">{new Date(entry.created_at).toLocaleString()}</td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
+      </div>
     </div>
   )
 }

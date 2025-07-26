@@ -1,3 +1,7 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
 .admin-dashboard-container.dark-mode {
   background-color: #1e1e1e;
   color: #f6f6f6;
@@ -31,6 +35,13 @@
   background-color: #333;
   color: #f6f6f6;
   border: 1px solid #555;
+}
+
+.admin-dashboard-container.dark-mode h1,
+.admin-dashboard-container.dark-mode h2,
+.admin-dashboard-container.dark-mode h3,
+.admin-dashboard-container.dark-mode h4 {
+  color: #f6f6f6;
 }
 
 html, body {
@@ -157,6 +168,7 @@ input, select, button {
   width: auto;
   flex-shrink: 0;
   padding: 10px 14px;
+  margin: 0px 4px;
   border-radius: 4px;
   font-weight: 200;
   cursor: pointer;
@@ -171,4 +183,39 @@ input, select, button {
   background-color: #e3f1eb;
   color: #008060;
   font-weight: bold;
+}
+
+.dark-mode-toggle {
+  display: inline-flex;
+  align-items: center;
+  cursor: pointer;
+}
+
+.dark-mode-toggle .switch-track {
+  width: 44px;
+  height: 24px;
+  background-color: #ccc;
+  border-radius: 12px;
+  padding: 2px;
+  transition: background-color 0.3s;
+  display: flex;
+  align-items: center;
+}
+
+.dark-mode-toggle .switch-thumb {
+  width: 20px;
+  height: 20px;
+  background-color: white;
+  border-radius: 50%;
+  box-shadow: 0 0 2px rgba(0, 0, 0, 0.2);
+  transform: translateX(0);
+  transition: transform 0.3s ease-in-out;
+}
+
+.dark-mode-toggle .switch-track.dark {
+  background-color: #008060;
+}
+
+.dark-mode-toggle .switch-thumb.dark {
+  transform: translateX(20px);
 }
