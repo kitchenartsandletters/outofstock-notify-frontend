@@ -2,7 +2,7 @@ import AdminDashboard from './components/AdminDashboard'
 
 const App = () => {
   return (
-    <div className="admin-dashboard-container w-full">
+    <div className="w-full min-h-screen bg-white text-black dark:bg-gray-900 dark:text-white">
         <AdminDashboard />
     </div>
   )
