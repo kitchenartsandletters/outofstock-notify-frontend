@@ -189,7 +189,11 @@ const AdminDashboard = () => {
           <button onClick={handlePrint} className="px-4 py-2 bg-gray-500 text-white rounded hover:bg-gray-600">🖨️</button>
         </div>
       </div>
-      {/* Table */}
+      {/* FilterControls and Table */}
+      <FilterControls
+        selectedFilter={selectedFilter}
+        handleFilterChange={handleFilterChange}
+      />
       <div className="overflow-x-auto">
         <table className="min-w-full border-collapse border border-gray-200 dark:border-gray-700">
           <thead className="bg-gray-100 dark:bg-gray-800">
