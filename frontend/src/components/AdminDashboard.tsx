@@ -48,11 +48,10 @@ const AdminDashboard = () => {
   }, [isDarkMode]);
 
   const toggleDarkMode = () => {
-    setIsDarkMode(prev => {
-      const newValue = !prev;
-      localStorage.setItem('theme', isDarkMode ? 'dark' : 'light');
-      return newValue;
-    });
+    const newTheme = isDarkMode ? 'light' : 'dark';
+    localStorage.setItem('theme', newTheme);
+    document.documentElement.classList.toggle('dark');
+    setIsDarkMode(!isDarkMode);
   };
 
   const handleFilterChange = (e: React.ChangeEvent<HTMLInputElement>) => {
