@@ -21,7 +21,7 @@ export default function ExportButtons({ filteredData }: ExportButtonsProps) {
       decodeHTMLEntities(entry.product_title),
       entry.isbn || "—",
       entry.email,
-      new Date(entry.created_at).toLocaleString(),
+      new Date(entry.created_at).toLocaleDateString(),
     ]);
     const csvContent =
       "data:text/csv;charset=utf-8," +
@@ -43,7 +43,7 @@ export default function ExportButtons({ filteredData }: ExportButtonsProps) {
       decodeHTMLEntities(entry.product_title),
       entry.isbn || "—",
       entry.email,
-      new Date(entry.created_at).toLocaleString(),
+      new Date(entry.created_at).toLocaleDateString(),
     ]);
     autoTable(doc, {
       head: [tableColumn],
