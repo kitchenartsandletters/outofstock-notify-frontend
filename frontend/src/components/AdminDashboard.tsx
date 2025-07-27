@@ -152,7 +152,7 @@ const AdminDashboard = () => {
     item.email.toLowerCase().includes(selectedFilter.toLowerCase()) ||
     item.cr_id?.toLowerCase().includes(selectedFilter.toLowerCase())
   );
-
+/*
   // Export CSV
   const handleExportCSV = () => {
     const headers = ["ID", "Product Title", "ISBN", "Email", "Submitted"];
@@ -197,7 +197,7 @@ const AdminDashboard = () => {
 
   const handlePrint = () => {
     window.print();
-  };
+  };*/
 
   return (
     <div className={`p-6 bg-white dark:bg-gray-900 min-h-screen`}>

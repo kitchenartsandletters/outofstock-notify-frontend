@@ -15,14 +15,13 @@ const decodeHTMLEntities = (str: string): string => {
 
 export default function ExportButtons({ filteredData }: ExportButtonsProps) {
   const handleExportCSV = () => {
-    const headers = ["ID", "Product Title", "ISBN", "Email", "Submitted", "Link"];
+    const headers = ["ID", "Product Title", "ISBN", "Email", "Submitted"];
     const rows = filteredData.map((entry) => [
-      `CR${entry.cr_id || "N/A"}`,
+      entry.cr_id || "CRN/A",
       decodeHTMLEntities(entry.product_title),
       entry.isbn || "—",
       entry.email,
       new Date(entry.created_at).toLocaleString(),
-      `https://admin.shopify.com/store/castironbooks/products/${entry.product_id}`,
     ]);
     const csvContent =
       "data:text/csv;charset=utf-8," +
@@ -40,12 +39,11 @@ export default function ExportButtons({ filteredData }: ExportButtonsProps) {
     const doc = new jsPDF();
     const tableColumn = ["ID", "Product Title", "ISBN", "Email", "Submitted", "Link"];
     const tableRows = filteredData.map((entry) => [
-      `CR${entry.cr_id || "N/A"}`,
+      entry.cr_id || "CRN/A",
       decodeHTMLEntities(entry.product_title),
       entry.isbn || "—",
       entry.email,
       new Date(entry.created_at).toLocaleString(),
-      `https://admin.shopify.com/store/castironbooks/products/${entry.product_id}`,
     ]);
     autoTable(doc, {
       head: [tableColumn],
