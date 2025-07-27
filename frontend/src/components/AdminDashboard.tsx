@@ -221,8 +221,8 @@ const AdminDashboard = () => {
           <thead className="bg-gray-100 dark:bg-gray-800">
             <tr>
               <th className="border px-4 py-2 dark:border-gray-700 text-left">ID</th>
-              <th className="border px-4 py-2 dark:border-gray-700 text-left">Product ID</th>
               <th className="border px-4 py-2 dark:border-gray-700 text-left">Product Title</th>
+              <th className="border px-4 py-2 dark:border-gray-700 text-left">ISBN</th>
               <th className="border px-4 py-2 dark:border-gray-700 text-left">Email</th>
               <th className="border px-4 py-2 dark:border-gray-700 text-left">Created At</th>
               <th className="border px-4 py-2 dark:border-gray-700 text-left">Link</th>
@@ -232,8 +232,8 @@ const AdminDashboard = () => {
             {filteredItems.map((entry, index) => (
               <tr key={index} className="even:bg-gray-50 dark:even:bg-gray-700">
                 <td className="border px-4 py-2 dark:border-gray-700">{entry.cr_id || 'CRN/A'}</td>
-                <td className="border px-4 py-2 dark:border-gray-700">{entry.product_id}</td>
                 <td className="border px-4 py-2 dark:border-gray-700">{decodeHTMLEntities(entry.product_title)}</td>
+                <td className="border px-4 py-2 dark:border-gray-700">{entry.isbn}</td>
                 <td className="border px-4 py-2 dark:border-gray-700">{entry.email}</td>
                 <td className="border px-4 py-2 dark:border-gray-700">{new Date(entry.created_at).toLocaleString()}</td>
                 <td className="border px-4 py-2 dark:border-gray-700">

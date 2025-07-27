@@ -37,7 +37,7 @@ export default function ExportButtons({ filteredData }: ExportButtonsProps) {
 
   const handleExportPDF = () => {
     const doc = new jsPDF();
-    const tableColumn = ["ID", "Product Title", "ISBN", "Email", "Submitted", "Link"];
+    const tableColumn = ["ID", "Product Title", "ISBN", "Email", "Submitted"];
     const tableRows = filteredData.map((entry) => [
       entry.cr_id || "CRN/A",
       decodeHTMLEntities(entry.product_title),
