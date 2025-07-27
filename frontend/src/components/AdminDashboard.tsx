@@ -155,14 +155,13 @@ const AdminDashboard = () => {
 
   // Export CSV
   const handleExportCSV = () => {
-    const headers = ["ID", "Product Title", "ISBN", "Email", "Submitted", "Link"];
+    const headers = ["ID", "Product Title", "ISBN", "Email", "Submitted"];
     const rows = filteredData.map((entry: InterestEntry) => [
-      `CR${entry.cr_id || "N/A"}`,
+      entry.cr_id || "CRN/A",
       decodeHTMLEntities(entry.product_title),
       entry.isbn || "—",
       entry.email,
       new Date(entry.created_at).toLocaleString(),
-      `https://admin.shopify.com/store/castironbooks/products/${entry.product_id}`,
     ]);
     const csvContent =
       "data:text/csv;charset=utf-8," +
@@ -179,14 +178,13 @@ const AdminDashboard = () => {
   // Export PDF
   const handleExportPDF = () => {
     const doc = new jsPDF();
-    const tableColumn = ["ID", "Product Title", "ISBN", "Email", "Submitted", "Link"];
+    const tableColumn = ["ID", "Product Title", "ISBN", "Email", "Submitted"];
     const tableRows = filteredData.map((entry: InterestEntry) => [
       entry.cr_id || "CRN/A",
       decodeHTMLEntities(entry.product_title),
       entry.isbn || "—",
       entry.email,
       new Date(entry.created_at).toLocaleString(),
-      `https://admin.shopify.com/store/castironbooks/products/${entry.product_id}`,
     ]);
     doc.autoTable({
       head: [tableColumn],
@@ -227,6 +225,7 @@ const AdminDashboard = () => {
               <th className="border px-4 py-2 dark:border-gray-700 text-left">Product Title</th>
               <th className="border px-4 py-2 dark:border-gray-700 text-left">Email</th>
               <th className="border px-4 py-2 dark:border-gray-700 text-left">Created At</th>
+              <th className="border px-4 py-2 dark:border-gray-700 text-left">Link</th>
             </tr>
           </thead>
           <tbody>
@@ -237,6 +236,15 @@ const AdminDashboard = () => {
                 <td className="border px-4 py-2 dark:border-gray-700">{decodeHTMLEntities(entry.product_title)}</td>
                 <td className="border px-4 py-2 dark:border-gray-700">{entry.email}</td>
                 <td className="border px-4 py-2 dark:border-gray-700">{new Date(entry.created_at).toLocaleString()}</td>
+                <td className="border px-4 py-2 dark:border-gray-700">
+                  <a
+                    href={`https://admin.shopify.com/store/castironbooks/products/${entry.product_id}`}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                  >
+                    View Product
+                  </a>
+                </td>
               </tr>
             ))}
           </tbody>
