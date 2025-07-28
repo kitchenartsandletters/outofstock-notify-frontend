@@ -83,7 +83,10 @@ Protected by token: must match VITE_ADMIN_TOKEN.
 
 ⸻
 
-main-product.liquid snippet - currently written to line 514
+main-product.liquid snippet - currently written to line 514 below
+{% if product.available == false and collection.title != 'Past Out-of-Print Offers' %}
+This item is no longer available.
+(below line 585 in current live theme version 7/28/25)
 
 <div id="notify-form-wrapper" class="product-form__line-item-field" style="margin-top: 1rem;">
                                       <label id="notify-label" for="notify-email" class="product-form__line-item-text-label">
