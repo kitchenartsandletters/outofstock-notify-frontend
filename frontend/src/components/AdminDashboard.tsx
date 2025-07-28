@@ -56,6 +56,24 @@ const AdminDashboard = () => {
   const handleFilterChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     setSelectedFilter(e.target.value);
   };
+
+  const handleSort = (key: keyof InterestEntry) => {
+    setSortConfig(prev => {
+      if (prev?.key === key) {
+        if (prev.direction === 'asc') {
+          return { key, direction: 'desc' };
+        } else if (prev.direction === 'desc') {
+          return null;
+        }
+      }
+      return { key, direction: 'asc' };
+    });
+  };
+
+  const renderSortIcon = (key: keyof InterestEntry) => {
+    if (!sortConfig || sortConfig.key !== key) return '⇅';
+    return sortConfig.direction === 'asc' ? '↑' : '↓';
+  };
   
   useEffect(() => {
     const fetchData = async () => {
@@ -211,11 +229,39 @@ const AdminDashboard = () => {
         <table className="min-w-full border-collapse border border-gray-200 dark:border-gray-700">
           <thead className="bg-gray-100 dark:bg-gray-800">
             <tr>
-              <th className="border px-4 py-2 dark:border-gray-700 text-left">ID</th>
-              <th className="border px-4 py-2 dark:border-gray-700 text-left">Product Title</th>
+              <th
+                onClick={() => handleSort('cr_id')}
+                className={`cursor-pointer border px-4 py-2 dark:border-gray-700 text-left ${
+                  sortConfig?.key === 'cr_id' ? 'text-green-600 dark:text-green-400' : ''
+                }`}
+              >
+                ID {renderSortIcon('cr_id')}
+              </th>
+              <th
+                onClick={() => handleSort('product_title')}
+                className={`cursor-pointer border px-4 py-2 dark:border-gray-700 text-left ${
+                  sortConfig?.key === 'product_title' ? 'text-green-600 dark:text-green-400' : ''
+                }`}
+              >
+                Product Title {renderSortIcon('product_title')}
+              </th>
               <th className="border px-4 py-2 dark:border-gray-700 text-left">ISBN</th>
-              <th className="border px-4 py-2 dark:border-gray-700 text-left">Email</th>
-              <th className="border px-4 py-2 dark:border-gray-700 text-left">Created At</th>
+              <th
+                onClick={() => handleSort('email')}
+                className={`cursor-pointer border px-4 py-2 dark:border-gray-700 text-left ${
+                  sortConfig?.key === 'email' ? 'text-green-600 dark:text-green-400' : ''
+                }`}
+              >
+                Email {renderSortIcon('email')}
+              </th>
+              <th
+                onClick={() => handleSort('created_at')}
+                className={`cursor-pointer border px-4 py-2 dark:border-gray-700 text-left ${
+                  sortConfig?.key === 'created_at' ? 'text-green-600 dark:text-green-400' : ''
+                }`}
+              >
+                Created At {renderSortIcon('created_at')}
+              </th>
               <th className="border px-4 py-2 dark:border-gray-700 text-left">Link</th>
             </tr>
           </thead>
