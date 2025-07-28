@@ -266,7 +266,7 @@ const AdminDashboard = () => {
             </tr>
           </thead>
           <tbody>
-            {filteredItems.map((entry, index) => (
+            {filteredData.map((entry, index) => (
               <tr key={index} className="even:bg-gray-50 dark:even:bg-gray-700">
                 <td className="border px-4 py-2 dark:border-gray-700">{entry.cr_id || 'CRN/A'}</td>
                 <td className="border px-4 py-2 dark:border-gray-700">{decodeHTMLEntities(entry.product_title)}</td>
