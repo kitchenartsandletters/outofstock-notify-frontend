@@ -42,24 +42,15 @@ const AdminDashboard = () => {
   useEffect(() => {
     if (isDarkMode) {
       document.documentElement.classList.add('dark');
+      localStorage.setItem('theme', 'dark');
     } else {
       document.documentElement.classList.remove('dark');
+      localStorage.setItem('theme', 'light');
     }
   }, [isDarkMode]);
 
   const toggleDarkMode = () => {
-    setIsDarkMode(prev => {
-      const newTheme = prev ? 'light' : 'dark';
-      localStorage.setItem('theme', newTheme);
-
-      if (newTheme === 'dark') {
-        document.documentElement.classList.add('dark');
-      } else {
-        document.documentElement.classList.remove('dark');
-      }
-
-      return !prev;
-    });
+    setIsDarkMode(prev => !prev);
   };
 
   const handleFilterChange = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -202,7 +193,7 @@ const AdminDashboard = () => {
   return (
     <div className={`p-6 bg-white dark:bg-gray-900 min-h-screen`}>
       <DashboardHeader>
-        <DarkModeToggle isDarkMode={isDarkMode} setIsDarkMode={setIsDarkMode} />
+        <DarkModeToggle isDarkMode={isDarkMode} setIsDarkMode={toggleDarkMode} />
       </DashboardHeader>
       {loading && <p>Loading...</p>}
       {error && <p className="text-red-600 text-sm">Error: {error}</p>}

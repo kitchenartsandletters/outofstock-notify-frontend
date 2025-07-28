@@ -1,8 +1,6 @@
-import { Dispatch, SetStateAction } from 'react';
-
 interface DarkModeToggleProps {
   isDarkMode: boolean;
-  setIsDarkMode: Dispatch<SetStateAction<boolean>>;
+  setIsDarkMode: () => void;
 }
 
 const DarkModeToggle = ({ isDarkMode, setIsDarkMode }: DarkModeToggleProps) => {
@@ -12,7 +10,7 @@ const DarkModeToggle = ({ isDarkMode, setIsDarkMode }: DarkModeToggleProps) => {
       <input
         type="checkbox"
         checked={isDarkMode}
-        onChange={() => setIsDarkMode(!isDarkMode)}
+        onChange={setIsDarkMode}
         className="sr-only"
       />
       <div
