@@ -33,7 +33,6 @@ const AdminDashboard = () => {
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
   const [sortConfig, setSortConfig] = useState<{ key: keyof InterestEntry; direction: 'asc' | 'desc' } | null>(null)
-  const [filterText, setFilterText] = useState("")
   const [isDarkMode, setIsDarkMode] = useState(() => {
     const stored = localStorage.getItem('theme');
     return stored === 'dark';
@@ -156,7 +155,7 @@ const AdminDashboard = () => {
     Object.values(entry)
       .join(" ")
       .toLowerCase()
-      .includes(filterText.toLowerCase())
+      .includes(selectedFilter.toLowerCase())
   )
 
   const filteredItems = data.filter(item =>
