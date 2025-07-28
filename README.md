@@ -83,6 +83,111 @@ Protected by token: must match VITE_ADMIN_TOKEN.
 
 ⸻
 
+main-product.liquid snippet - currently written to line 514
+
+<div id="notify-form-wrapper" class="product-form__line-item-field" style="margin-top: 1rem;">
+                                      <label id="notify-label" for="notify-email" class="product-form__line-item-text-label">
+                                        Want to be added to our request list?
+                                      </label>
+                                      <input
+                                        id="notify-email"
+                                        class="product-form__line-item-text-input"
+                                        type="email"
+                                        name="notify-email"
+                                        placeholder="Enter your email"
+                                        required
+                                        style="margin-bottom: 0.5rem; width: 100%;"
+                                      />
+                                      <button
+                                        type="button"
+                                        id="notify-submit"
+                                        class="c-btn c-btn--primary"
+                                        style="margin-top: 0.25rem;"
+                                      >
+                                        Notify Me
+                                      </button>
+                                      <p id="notify-status" style="margin-top: 0.5rem; font-size: 0.9em;" aria-live="polite"></p>
+                                    
+                                      <!-- Hidden span for barcode injection -->
+                                      <span id="shopify-barcode" style="display:none;">
+                                        {{ product.variants.first.barcode | default: 'NO_BARCODE' }}
+                                      </span>
+                                    </div>
+                                    
+                                    <script>
+                                      document.addEventListener('DOMContentLoaded', function () {
+                                        const submitBtn = document.getElementById('notify-submit');
+                                        const emailInput = document.getElementById('notify-email');
+                                        const statusEl = document.getElementById('notify-status');
+                                        const labelEl = document.getElementById('notify-label');
+                                        const barcode = document.getElementById('shopify-barcode')?.textContent?.trim() || 'NO_BARCODE';
+                                    
+                                        {% if customer %}
+                                          if (emailInput) emailInput.value = "{{ customer.email }}";
+                                        {% endif %}
+                                    
+                                        const handleSubmit = async () => {
+                                          const email = emailInput.value.trim();
+                                          if (!email || !email.includes('@')) {
+                                            statusEl.textContent = 'Please enter a valid email.';
+                                            statusEl.style.color = 'red';
+                                            return;
+                                          }
+                                    
+                                          submitBtn.disabled = true;
+                                          const originalText = submitBtn.textContent;
+                                          submitBtn.textContent = 'Sending...';
+                                    
+                                          const data = {
+                                            product_id: {{ product.id }},
+                                            product_title: "{{ product.title | escape }}",
+                                            isbn: barcode,
+                                            email: email
+                                          };
+                                    
+                                          console.log("Notify form submission payload:", data);
+                                    
+                                          try {
+                                            const res = await fetch("https://api.kitchenartsandletters.com/api/interest", {
+                                              method: "POST",
+                                              headers: {
+                                                "Content-Type": "application/json"
+                                              },
+                                              body: JSON.stringify(data)
+                                            });
+                                    
+                                            if (res.ok) {
+                                              statusEl.textContent = 'Thank you! We’ll notify you when this title is available.';
+                                              statusEl.style.color = 'green';
+                                              emailInput.style.display = 'none';
+                                              submitBtn.style.display = 'none';
+                                              labelEl.style.display = 'none';
+                                            } else {
+                                              statusEl.textContent = 'There was an issue submitting your request.';
+                                              statusEl.style.color = 'red';
+                                            }
+                                          } catch (err) {
+                                            statusEl.textContent = 'Network error. Please try again later.';
+                                            statusEl.style.color = 'red';
+                                          }
+                                    
+                                          submitBtn.disabled = false;
+                                          submitBtn.textContent = originalText;
+                                        };
+                                    
+                                        submitBtn?.addEventListener('click', handleSubmit);
+                                    
+                                        emailInput?.addEventListener('keydown', function (e) {
+                                          if (e.key === 'Enter') {
+                                            e.preventDefault();
+                                            handleSubmit();
+                                          }
+                                        });
+                                      });
+                                    </script>
+
+⸻
+
 ⚠️ Key Debugging Fixes
 	•	✅ VITE_API_BASE_URL must be fully qualified (e.g. https://...)
 	•	✅ Removed extraneous = in fetch:

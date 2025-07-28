@@ -73,7 +73,7 @@ const AdminTable: React.FC<AdminTableProps> = ({
               <td className="border px-4 py-2 dark:border-gray-700">{entry.isbn}</td>
               <td className="border px-4 py-2 dark:border-gray-700">{entry.email}</td>
               <td className="border px-4 py-2 dark:border-gray-700">{new Date(entry.created_at).toLocaleString()}</td>
-              <td className="border px-4 py-2 dark:border-gray-700">
+              <td className="border px-4 py-2 dark:border-gray-700 print-hidden">
                 <a
                   href={`https://admin.shopify.com/store/castironbooks/products/${entry.product_id}`}
                   target="_blank"
