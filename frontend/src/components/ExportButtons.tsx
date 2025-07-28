@@ -45,7 +45,10 @@ export default function ExportButtons({ filteredData }: ExportButtonsProps) {
       entry.email,
       new Date(entry.created_at).toLocaleDateString(),
     ]);
+    doc.text("Out of Stock Request List", 14, 15);
+    doc.text("Printed on: " + new Date().toLocaleDateString(), 14, 20);
     autoTable(doc, {
+      startY: 20,
       head: [tableColumn],
       body: tableRows,
       styles: { fontSize: 8 },

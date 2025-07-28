@@ -213,20 +213,26 @@ const AdminDashboard = () => {
   return (
     <div className={`p-6 bg-white dark:bg-gray-900 min-h-screen`}>
       <DashboardHeader>
-        <DarkModeToggle isDarkMode={isDarkMode} setIsDarkMode={toggleDarkMode} />
+        <div className="print-hidden">
+          <DarkModeToggle isDarkMode={isDarkMode} setIsDarkMode={toggleDarkMode} />
+        </div>
       </DashboardHeader>
       {loading && <p>Loading...</p>}
       {error && <p className="text-red-600 text-sm">Error: {error}</p>}
       {/* Filter and export controls */}
-      <ExportButtons
-        filteredData={filteredData}
-        decodeHTMLEntities={decodeHTMLEntities}
-      />
+      <div className="print-hidden">
+        <ExportButtons
+          filteredData={filteredData}
+          decodeHTMLEntities={decodeHTMLEntities}
+        />
+      </div>
       {/* FilterControls and Table */}
-      <FilterControls
-        selectedFilter={selectedFilter}
-        handleFilterChange={handleFilterChange}
-      />
+      <div className="print-hidden">
+        <FilterControls
+          selectedFilter={selectedFilter}
+          handleFilterChange={handleFilterChange}
+        />
+      </div>
       <AdminTable
         filteredData={filteredData}
         handleSort={handleSort}
