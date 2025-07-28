@@ -132,7 +132,9 @@ const AdminDashboard = () => {
     }
 
     if (typeof aVal === 'string' && typeof bVal === 'string') {
-      return aVal.localeCompare(bVal) * (direction === 'asc' ? 1 : -1)
+      const stripLeadingArticle = (str: string) =>
+        str.replace(/^\s*(a |an |the )/i, '').trim();
+      return stripLeadingArticle(aVal).localeCompare(stripLeadingArticle(bVal)) * (direction === 'asc' ? 1 : -1);
     }
 
     // Safer date comparison for created_at field
