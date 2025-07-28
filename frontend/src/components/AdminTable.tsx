@@ -62,7 +62,7 @@ const AdminTable: React.FC<AdminTableProps> = ({
             >
               Created At {renderSortIcon('created_at')}
             </th>
-            <th className="border px-4 py-2 dark:border-gray-700 text-left">Link</th>
+            <th className="border px-4 py-2 dark:border-gray-700 text-left print-hidden">Link</th>
           </tr>
         </thead>
         <tbody>
