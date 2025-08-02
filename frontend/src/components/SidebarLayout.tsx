@@ -11,26 +11,27 @@ const navItems = [
   { label: 'System Status', path: '/status' },
 ];
 
-const [isDarkMode, setIsDarkMode] = useState(() => {
-  return localStorage.getItem('theme') === 'dark';
-});
-
-const toggleDarkMode = () => {
-  setIsDarkMode(prev => {
-    const newTheme = !prev;
-    localStorage.setItem('theme', newTheme ? 'dark' : 'light');
-    if (newTheme) {
-      document.documentElement.classList.add('dark');
-    } else {
-      document.documentElement.classList.remove('dark');
-    }
-    return newTheme;
-  });
-};
 
 const SidebarLayout = ({ children }: { children: React.ReactNode }) => {
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const location = useLocation();
+
+  const [isDarkMode, setIsDarkMode] = useState(() => {
+    return localStorage.getItem('theme') === 'dark';
+  });
+
+  const toggleDarkMode = () => {
+    setIsDarkMode(prev => {
+      const newTheme = !prev;
+      localStorage.setItem('theme', newTheme ? 'dark' : 'light');
+      if (newTheme) {
+        document.documentElement.classList.add('dark');
+      } else {
+        document.documentElement.classList.remove('dark');
+      }
+      return newTheme;
+    });
+  };
 
   const toggleSidebar = () => {
     console.log('[Toggle] clicked');
