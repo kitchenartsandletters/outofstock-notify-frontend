@@ -12,14 +12,7 @@ const SidebarLayout = ({ children }: { children: React.ReactNode }) => {
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const location = useLocation();
 
-  const toggleSidebar = () => {
-    console.log('Toggling sidebar...');
-    setSidebarOpen(prev => !prev);
-    };
-
-    useEffect(() => {
-    console.log('Sidebar open state:', sidebarOpen);
-    }, [sidebarOpen]);
+  const toggleSidebar = () => setSidebarOpen(!sidebarOpen);
   const closeSidebar = () => setSidebarOpen(false);
 
   useEffect(() => {
@@ -39,7 +32,7 @@ const SidebarLayout = ({ children }: { children: React.ReactNode }) => {
     }, [sidebarOpen]);
 
   return (
-    <div className="flex min-h-screen bg-white dark:bg-gray-900 text-black dark:text-white">
+    <div className="flex min-h-screen bg-white dark:bg-gray-900 text-black dark:text-white overflow-hidden">
       {/* Sidebar */}
       <aside
         className={`fixed z-40 top-0 left-0 h-full w-64 bg-white dark:bg-gray-800 shadow-lg transform transition-transform duration-300 ease-in-out min-w-64
