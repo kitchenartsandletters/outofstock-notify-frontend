@@ -49,10 +49,9 @@ const SidebarLayout = ({ children }: { children: React.ReactNode }) => {
         fixed z-10 top-0 left-0 h-full w-64 shadow-lg transform transition-transform duration-300 ease-in-out min-w-64
         ${sidebarOpen ? 'translate-x-0' : '-translate-x-full'}
         md:relative md:translate-x-0 md:flex md:flex-col md:w-64 md:shadow-none md:z-auto
-        ${sidebarOpen ? 'bg-green-100' : 'bg-red-100'}
     `;
   return (
-    <div className="flex min-h-screen bg-white dark:bg-gray-900 text-black dark:text-white overflow-hidden border-4 border-purple-500">
+    <div className="flex min-h-screen bg-white dark:bg-gray-900 text-black dark:text-white">
       {/* Sidebar */}
       <aside
         className={sidebarClass}
@@ -85,10 +84,6 @@ const SidebarLayout = ({ children }: { children: React.ReactNode }) => {
           onClick={closeSidebar}
         ></div>
       )}
-        <div className="text-xs fixed bottom-0 left-0 p-2 z-50 bg-white text-black">
-        <div className="block md:hidden">Mobile view</div>
-        <div className="hidden md:block">Desktop view</div>
-        </div>
       {/* Main content */}
       <div className="flex-1 flex flex-col">
         <header className="flex items-center justify-between px-4 py-3 border-b dark:border-gray-700 md:hidden">
