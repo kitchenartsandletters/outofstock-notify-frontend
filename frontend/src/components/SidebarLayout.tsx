@@ -90,7 +90,7 @@ const SidebarLayout = ({ children }: { children: React.ReactNode }) => {
           <button onClick={toggleSidebar}>
             <Menu className="w-6 h-6" />
           </button>
-          <div className="font-semibold text-lg">Out-of-Stock Admin</div>
+          <div className="font-semibold text-lg">Admin Dashboard</div>
         </header>
         <main className="flex-1 p-6 overflow-y-auto">
           {children}
