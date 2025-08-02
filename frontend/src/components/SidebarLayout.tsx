@@ -92,7 +92,7 @@ const SidebarLayout = ({ children }: { children: React.ReactNode }) => {
           </button>
           <div className="font-semibold text-lg">Admin Dashboard</div>
         </header>
-        <main className="flex-1 p-6 overflow-y-auto">
+        <main className="flex-1 p-6 bg-white dark:bg-gray-900 overflow-y-auto">
           {children}
         </main>
       </div>
