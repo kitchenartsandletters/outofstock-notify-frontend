@@ -31,13 +31,16 @@ const SidebarLayout = ({ children }: { children: React.ReactNode }) => {
     };
     }, [sidebarOpen]);
 
+  const sidebarClass = `
+    fixed z-10 top-0 left-0 h-full w-64 bg-white dark:bg-gray-800 border-4 border-red-500 shadow-lg transform transition-transform duration-300 ease-in-out min-w-64
+    ${sidebarOpen ? 'translate-x-0' : '-translate-x-full'}
+    md:relative md:translate-x-0 md:flex md:flex-col md:w-64 md:shadow-none md:z-auto
+  `;
   return (
     <div className="flex min-h-screen bg-white dark:bg-gray-900 text-black dark:text-white overflow-hidden">
       {/* Sidebar */}
       <aside
-        className={`fixed z-10 top-0 left-0 h-full w-64 bg-white dark:bg-gray-800 border-4 border-red-500 shadow-lg transform transition-transform duration-300 ease-in-out min-w-64
-          ${sidebarOpen ? 'translate-x-0' : '-translate-x-full'}
-          md:relative md:translate-x-0 md:flex md:flex-col md:w-64 md:shadow-none md:z-auto`}
+        className={sidebarClass}
       >
         <div className="flex items-center justify-between px-4 py-4 border-b dark:border-gray-700 md:hidden">
           <h2 className="text-xl font-bold">Menu</h2>
