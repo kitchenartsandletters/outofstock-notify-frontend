@@ -211,7 +211,7 @@ const AdminDashboard = () => {
   };*/
 
   return (
-    <div className="space-y-4 p-6 bg-white dark:bg-gray-900">
+    <div className={`p-6 bg-white dark:bg-gray-900 min-h-screen`}>
       <DashboardHeader>
         <div className="print-hidden">
           <DarkModeToggle isDarkMode={isDarkMode} setIsDarkMode={toggleDarkMode} />
