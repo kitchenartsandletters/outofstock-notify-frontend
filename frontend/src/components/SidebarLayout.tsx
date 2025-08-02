@@ -3,6 +3,8 @@ import { useState, useEffect } from 'react';
 import { Link, useLocation } from 'react-router-dom';
 import { Menu, X } from 'lucide-react'; // optional, you can swap icons
 
+console.log('Initial window width:', window.innerWidth);
+
 const navItems = [
   { label: 'Request Service', path: '/requests' },
   { label: 'System Status', path: '/status' },
@@ -12,7 +14,18 @@ const SidebarLayout = ({ children }: { children: React.ReactNode }) => {
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const location = useLocation();
 
-  const toggleSidebar = () => setSidebarOpen(!sidebarOpen);
+  const toggleSidebar = () => {
+    setSidebarOpen(prev => {
+        const newState = !prev;
+        console.log('[Sidebar Toggle] sidebarOpen:', newState);
+        return newState;
+    });
+    };
+
+    useEffect(() => {
+        console.log('[SidebarEffect] sidebarOpen changed to:', sidebarOpen);
+    }, [sidebarOpen]);
+
   const closeSidebar = () => setSidebarOpen(false);
 
   useEffect(() => {
@@ -31,13 +44,14 @@ const SidebarLayout = ({ children }: { children: React.ReactNode }) => {
     };
     }, [sidebarOpen]);
 
-  const sidebarClass = `
-    fixed z-10 top-0 left-0 h-full w-64 bg-white dark:bg-gray-800 shadow-lg transform transition-transform duration-300 ease-in-out min-w-64
-    ${sidebarOpen ? 'translate-x-0' : '-translate-x-full'}
-    md:relative md:translate-x-0 md:flex md:flex-col md:w-64 md:shadow-none md:z-auto
-  `;
+    const sidebarClass = `
+        fixed z-10 top-0 left-0 h-full w-64 shadow-lg transform transition-transform duration-300 ease-in-out min-w-64
+        ${sidebarOpen ? 'translate-x-0' : '-translate-x-full'}
+        md:relative md:translate-x-0 md:flex md:flex-col md:w-64 md:shadow-none md:z-auto
+        ${sidebarOpen ? 'bg-green-100' : 'bg-red-100'}
+    `;
   return (
-    <div className="flex min-h-screen bg-white dark:bg-gray-900 text-black dark:text-white overflow-hidden">
+    <div className="flex min-h-screen bg-white dark:bg-gray-900 text-black dark:text-white overflow-hidden border-4 border-purple-500">
       {/* Sidebar */}
       <aside
         className={sidebarClass}
