@@ -35,7 +35,7 @@ const SidebarLayout = ({ children }: { children: React.ReactNode }) => {
     <div className="flex min-h-screen bg-white dark:bg-gray-900 text-black dark:text-white overflow-hidden">
       {/* Sidebar */}
       <aside
-        className={`fixed z-40 top-0 left-0 h-full w-64 bg-white dark:bg-gray-800 shadow-lg transform transition-transform duration-300 ease-in-out min-w-64
+        className={`fixed z-10 top-0 left-0 h-full w-64 bg-white dark:bg-gray-800 border-4 border-red-500 shadow-lg transform transition-transform duration-300 ease-in-out min-w-64
           ${sidebarOpen ? 'translate-x-0' : '-translate-x-full'}
           md:relative md:translate-x-0 md:flex md:flex-col md:w-64 md:shadow-none md:z-auto`}
       >
@@ -72,7 +72,7 @@ const SidebarLayout = ({ children }: { children: React.ReactNode }) => {
       <div className="flex-1 flex flex-col">
         <header className="flex items-center justify-between px-4 py-3 border-b dark:border-gray-700 bg-red-200 z-50">
           <button onClick={toggleSidebar}>
-            <Menu className="w-6 h-6" />
+            <Menu className="w-6 h-6 bg-green-400" />
           </button>
           <div className="font-semibold text-lg">Out-of-Stock Admin</div>
         </header>
