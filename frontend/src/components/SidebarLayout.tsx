@@ -81,9 +81,6 @@ const SidebarLayout = ({ children }: { children: React.ReactNode }) => {
             <X className="w-6 h-6" />
           </button>
         </div>
-        <div className="mt-auto p-4 border-t dark:border-gray-700">
-            <DarkModeToggle isDarkMode={isDarkMode} setIsDarkMode={toggleDarkMode} />
-        </div>
         <nav className="flex flex-col p-4 gap-2">
           {navItems.map(({ label, path }) => (
             <Link
@@ -97,6 +94,9 @@ const SidebarLayout = ({ children }: { children: React.ReactNode }) => {
             </Link>
           ))}
         </nav>
+        <div className="mt-auto p-4 border-t dark:border-gray-700">
+            <DarkModeToggle isDarkMode={isDarkMode} setIsDarkMode={toggleDarkMode} />
+        </div>
       </aside>
 
       {/* Overlay for mobile */}

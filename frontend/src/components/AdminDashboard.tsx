@@ -193,7 +193,7 @@ const AdminDashboard = () => {
 
   return (
     <div className="space-y-4">
-      <DashboardHeader title="Admin Dashboard" />
+      <h1 className="text-2xl font-semibold mb-4">Request Service</h1>
       {loading && <p>Loading...</p>}
       {error && <p className="text-red-600 text-sm">Error: {error}</p>}
       {/* Filter and export controls */}
