@@ -2,6 +2,7 @@
 import { useState, useEffect } from 'react';
 import { Link, useLocation } from 'react-router-dom';
 import { Menu, X } from 'lucide-react'; // optional, you can swap icons
+import DarkModeToggle from './DarkModeToggle';
 
 console.log('Initial window width:', window.innerWidth);
 
@@ -9,6 +10,23 @@ const navItems = [
   { label: 'Request Service', path: '/requests' },
   { label: 'System Status', path: '/status' },
 ];
+
+const [isDarkMode, setIsDarkMode] = useState(() => {
+  return localStorage.getItem('theme') === 'dark';
+});
+
+const toggleDarkMode = () => {
+  setIsDarkMode(prev => {
+    const newTheme = !prev;
+    localStorage.setItem('theme', newTheme ? 'dark' : 'light');
+    if (newTheme) {
+      document.documentElement.classList.add('dark');
+    } else {
+      document.documentElement.classList.remove('dark');
+    }
+    return newTheme;
+  });
+};
 
 const SidebarLayout = ({ children }: { children: React.ReactNode }) => {
   const [sidebarOpen, setSidebarOpen] = useState(false);
@@ -61,6 +79,9 @@ const SidebarLayout = ({ children }: { children: React.ReactNode }) => {
           <button onClick={closeSidebar}>
             <X className="w-6 h-6" />
           </button>
+        </div>
+        <div className="mt-auto p-4 border-t dark:border-gray-700">
+            <DarkModeToggle isDarkMode={isDarkMode} setIsDarkMode={toggleDarkMode} />
         </div>
         <nav className="flex flex-col p-4 gap-2">
           {navItems.map(({ label, path }) => (

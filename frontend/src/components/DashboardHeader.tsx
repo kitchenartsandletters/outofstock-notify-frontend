@@ -1,20 +1,14 @@
 import { ReactNode } from 'react';
 
 type DashboardHeaderProps = {
-  title?: string;
-  children?: ReactNode;
+  title: string;
 };
 
-const DashboardHeader = ({ title, children }: DashboardHeaderProps) => {
+const DashboardHeader = ({ title }: DashboardHeaderProps) => {
   return (
-    <div className="flex items-center justify-between">
-      {title && (
-        <h1 className="text-3xl font-semibold text-gray-900 dark:text-gray-100">
-          {title}
-        </h1>
-      )}
-      {children}
-    </div>
+    <h1 className="text-3xl font-semibold text-gray-900 dark:text-gray-100">
+      {title}
+    </h1>
   );
 };
 

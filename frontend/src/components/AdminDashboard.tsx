@@ -2,7 +2,6 @@ import { useEffect, useState } from 'react'
 import FilterControls, { FilterControlsProps } from './FilterControls';
 import jsPDF from 'jspdf'
 import autoTable from 'jspdf-autotable'
-import DarkModeToggle from './DarkModeToggle';
 import DashboardHeader from './DashboardHeader';
 import ExportButtons from "./ExportButtons";
 import AdminTable from './AdminTable';
@@ -33,25 +32,7 @@ const AdminDashboard = () => {
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
   const [sortConfig, setSortConfig] = useState<{ key: keyof InterestEntry; direction: 'asc' | 'desc' } | null>(null)
-  const [isDarkMode, setIsDarkMode] = useState(() => {
-    const stored = localStorage.getItem('theme');
-    return stored === 'dark';
-  });
   const [selectedFilter, setSelectedFilter] = useState('');
-
-  useEffect(() => {
-    if (isDarkMode) {
-      document.documentElement.classList.add('dark');
-      localStorage.setItem('theme', 'dark');
-    } else {
-      document.documentElement.classList.remove('dark');
-      localStorage.setItem('theme', 'light');
-    }
-  }, [isDarkMode]);
-
-  const toggleDarkMode = () => {
-    setIsDarkMode(prev => !prev);
-  };
 
   const handleFilterChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     setSelectedFilter(e.target.value);
@@ -212,11 +193,7 @@ const AdminDashboard = () => {
 
   return (
     <div className="space-y-4">
-      <DashboardHeader title="Admin Dashboard">
-        <div className="print-hidden">
-          <DarkModeToggle isDarkMode={isDarkMode} setIsDarkMode={toggleDarkMode} />
-        </div>
-      </DashboardHeader>
+      <DashboardHeader title="Admin Dashboard" />
       {loading && <p>Loading...</p>}
       {error && <p className="text-red-600 text-sm">Error: {error}</p>}
       {/* Filter and export controls */}
