@@ -12,7 +12,14 @@ const SidebarLayout = ({ children }: { children: React.ReactNode }) => {
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const location = useLocation();
 
-  const toggleSidebar = () => setSidebarOpen(!sidebarOpen);
+  const toggleSidebar = () => {
+    console.log('Toggling sidebar...');
+    setSidebarOpen(prev => !prev);
+    };
+
+    useEffect(() => {
+    console.log('Sidebar open state:', sidebarOpen);
+    }, [sidebarOpen]);
   const closeSidebar = () => setSidebarOpen(false);
 
   useEffect(() => {
@@ -70,7 +77,7 @@ const SidebarLayout = ({ children }: { children: React.ReactNode }) => {
 
       {/* Main content */}
       <div className="flex-1 flex flex-col">
-        <header className="flex items-center justify-between px-4 py-3 border-b dark:border-gray-700">
+        <header className="flex items-center justify-between px-4 py-3 border-b dark:border-gray-700 md:hidden">
           <button onClick={toggleSidebar}>
             <Menu className="w-6 h-6" />
           </button>
