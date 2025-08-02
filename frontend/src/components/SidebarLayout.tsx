@@ -15,6 +15,7 @@ const SidebarLayout = ({ children }: { children: React.ReactNode }) => {
   const location = useLocation();
 
   const toggleSidebar = () => {
+    console.log('[Toggle] clicked');
     setSidebarOpen(prev => {
         const newState = !prev;
         console.log('[Sidebar Toggle] sidebarOpen:', newState);
@@ -84,7 +85,10 @@ const SidebarLayout = ({ children }: { children: React.ReactNode }) => {
           onClick={closeSidebar}
         ></div>
       )}
-
+        <div className="text-xs fixed bottom-0 left-0 p-2 z-50 bg-white text-black">
+        <div className="block md:hidden">Mobile view</div>
+        <div className="hidden md:block">Desktop view</div>
+        </div>
       {/* Main content */}
       <div className="flex-1 flex flex-col">
         <header className="flex items-center justify-between px-4 py-3 border-b dark:border-gray-700 md:hidden">
