@@ -23,6 +23,7 @@
 //   If no contact yet: POST /api/suppliers/{id}/contacts (if name filled)
 
 import React, { useEffect, useRef, useState } from 'react'
+import { createPortal } from 'react-dom'
 import {
   SupplierParty, SupplierAccount, SupplierContact,
   SupplierRole, OrderingMethod, ContactRole,
@@ -374,19 +375,24 @@ const SupplierForm: React.FC<Props> = ({
 
   // ---------------------------------------------------------------------------
   // Render
+  //
+  // Portaled to document.body, same as SupplierDetailSidebar. Stacking contract
+  // for this surface: sidebar backdrop z-40 / panel z-50, this modal's backdrop
+  // z-[60] / panel z-[70]. Keep the modal strictly above the sidebar — at equal
+  // z the portaled sidebar wins on DOM order and clips the Save button.
   // ---------------------------------------------------------------------------
 
-  return (
+  return createPortal(
     <>
       {/* Backdrop */}
       <div
-        className={`fixed inset-0 bg-black/40 backdrop-blur-sm z-40 transition-opacity duration-300 ${isVisible ? 'opacity-100' : 'opacity-0'}`}
+        className={`fixed inset-0 bg-black/40 backdrop-blur-sm z-[60] transition-opacity duration-300 ${isVisible ? 'opacity-100' : 'opacity-0'}`}
         onClick={handleClose}
       />
 
       {/* Modal panel */}
       <div
-        className={`fixed inset-0 z-50 flex items-start justify-center pt-8 px-4 pb-8 transition-opacity duration-300 ${isVisible ? 'opacity-100' : 'opacity-0'}`}
+        className={`fixed inset-0 z-[70] flex items-start justify-center pt-8 px-4 pb-8 transition-opacity duration-300 ${isVisible ? 'opacity-100' : 'opacity-0'}`}
       >
         <div className="w-full max-w-xl bg-white dark:bg-gray-950 rounded-xl border border-gray-200 dark:border-gray-800 shadow-2xl flex flex-col max-h-[90vh]">
 
@@ -812,7 +818,8 @@ const SupplierForm: React.FC<Props> = ({
 
         </div>
       </div>
-    </>
+    </>,
+    document.body
   )
 }
 
