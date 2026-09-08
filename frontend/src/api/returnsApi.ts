@@ -78,17 +78,24 @@ export interface ReturnsWorksheetResponse {
   offset: number
   sort: string
   order: 'asc' | 'desc'
+  /** When the on-hand snapshot last ran; on_hand is not a live read. */
+  snapshot_as_of?: string | null
+  source?: string
 }
 
 export async function fetchReturnsPublishers(): Promise<ReturnsPublisherTile[]> {
   return sc('/api/reporting/returns/publishers')
 }
 
-export async function fetchReturnsWorksheet(publisherId: string, opts: { limit?: number; excessOnly?: boolean; search?: string } = {}): Promise<ReturnsWorksheetResponse> {
+export async function fetchReturnsWorksheet(
+  publisherId: string,
+  opts: { limit?: number; excessOnly?: boolean; search?: string; includeZeroStock?: boolean } = {},
+): Promise<ReturnsWorksheetResponse> {
   return sc(`/api/reporting/returns/worksheet${qs({
     publisher_id: publisherId,
     limit: opts.limit ?? 1000,
     excess_only: opts.excessOnly || undefined,
+    include_zero_stock: opts.includeZeroStock || undefined,
     search: opts.search,
   })}`)
 }
