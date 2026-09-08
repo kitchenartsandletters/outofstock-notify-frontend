@@ -1,9 +1,15 @@
 // src/supply-chain/returns/ReturnDraft.tsx
 // The returns detail page — renders by status across the whole lifecycle:
-//   draft    → curate keep/return (linked to live on-hand), add titles, save
+//   draft    → curate keep/return, add titles, save
 //   picking  → pull sheet: record what was physically pulled (0 = phantom),
 //              then manifest behind a guarded confirm flow
 //   confirmed/shipped → read-only + printable packing list
+//
+// on_hand comes from the periodic snapshot, NOT a live Shopify read. A title
+// transferred into the store this morning can still show 0 until the snapshot
+// runs again. So on-hand is shown as guidance with its timestamp and never caps
+// what can be entered — the person filling this in is holding the books, and
+// the pull sheet reconciles against the physical count.
 //
 // The manifest is the one action that writes live Shopify inventory, so it is
 // gated: dry-run summary → explicit second confirmation → a 5s undo window
@@ -37,6 +43,10 @@ const clampInt = (v: number, max: number) => Math.max(0, Math.min(Math.round(v |
 const esc = (s: unknown) => String(s ?? '').replace(/[&<>"']/g, c =>
   ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c] as string));
 
+// Upper bound on a typed quantity. Deliberately not on_hand: the snapshot lags,
+// and a stale number must not be able to overrule the physical shelf.
+const ENTRY_MAX = 9999;
+
 export default function ReturnDraft() {
   const { returnId = '' } = useParams();
   const navigate = useNavigate();
@@ -50,6 +60,7 @@ export default function ReturnDraft() {
   const [dirty, setDirty] = useState(false);
   const [busy, setBusy] = useState(false);
   const [addSearch, setAddSearch] = useState('');
+  const [snapshotAsOf, setSnapshotAsOf] = useState<string | null>(null);
 
   // Manifest guarded flow
   type Stage = null | 'summary' | 'confirm' | 'undo' | 'running';
@@ -71,8 +82,11 @@ export default function ReturnDraft() {
       const st = detail.return.status;
       let byId = new Map<string, ReturnsWorksheetRow>();
       if (st === 'draft' || st === 'picking') {
-        const ws = await fetchReturnsWorksheet(detail.return.supplier_party_id, { limit: 1000 });
+        // includeZeroStock: on_hand is a periodic snapshot, so a title transferred
+        // in today can still read 0 and would otherwise be unfindable and unaddable.
+        const ws = await fetchReturnsWorksheet(detail.return.supplier_party_id, { limit: 1000, includeZeroStock: true });
         setWorksheet(ws.rows);
+        setSnapshotAsOf(ws.snapshot_as_of ?? null);
         byId = new Map(ws.rows.map(r => [r.inventory_item_id, r]));
       }
       setLines(detail.lines.map(l => {
@@ -109,16 +123,18 @@ export default function ReturnDraft() {
 
   const patchHeader = (p: Partial<ReturnIndexRow>) => { setHeader(h => (h ? { ...h, ...p } : h)); setDirty(true); };
 
-  // ---- draft editing (keep/return, linked to on-hand) ----
-  const maxReturn = (l: EditLine) => (l.on_hand > 0 ? l.on_hand : Math.max(l.requested, 0) || 9999);
+  // ---- draft editing (keep/return) ----
+  // on_hand informs the keep/return arithmetic and is flagged when exceeded, but
+  // it is NOT a limit — see the ENTRY_MAX note above.
+  const overStock = (l: EditLine) => l.on_hand > 0 && l.requested > l.on_hand;
   const setReturn = (id: string, v: number) => {
-    setLines(ls => ls.map(l => l.inventory_item_id === id ? { ...l, requested: clampInt(v, maxReturn(l)) } : l));
+    setLines(ls => ls.map(l => l.inventory_item_id === id ? { ...l, requested: clampInt(v, ENTRY_MAX) } : l));
     setDirty(true);
   };
   const setKeep = (id: string, keep: number) => {
     setLines(ls => ls.map(l => {
       if (l.inventory_item_id !== id) return l;
-      const k = clampInt(keep, l.on_hand > 0 ? l.on_hand : keep);
+      const k = clampInt(keep, ENTRY_MAX);
       return { ...l, requested: Math.max((l.on_hand || (k + l.requested)) - k, 0) };
     }));
     setDirty(true);
@@ -128,14 +144,20 @@ export default function ReturnDraft() {
     setLines(ls => [...ls, {
       id: `new:${w.inventory_item_id}`, inventory_item_id: w.inventory_item_id, variant_id: w.variant_id,
       isbn: w.isbn, title: w.title, list_price: w.price, on_hand: w.on_hand, sales_12mo: w.sales_12mo,
-      requested: w.suggested_return, picked: w.suggested_return, confirmed: 0, inventory_adjusted: false,
+      // A title the snapshot thinks is out of stock has no suggested return, but
+      // it is being added because someone is holding a copy — start at 1.
+      requested: w.suggested_return > 0 ? w.suggested_return : 1,
+      picked: w.suggested_return > 0 ? w.suggested_return : 1,
+      confirmed: 0, inventory_adjusted: false,
     }]);
     setAddSearch(''); setDirty(true);
   };
 
   // ---- picking editing (picked count) ----
   const setPicked = (id: string, v: number) => {
-    setLines(ls => ls.map(l => l.id === id ? { ...l, picked: clampInt(v, l.requested) } : l));
+    // Not capped at the plan either: if more copies turn up on the shelf than
+    // were planned, the pull sheet should be able to say so.
+    setLines(ls => ls.map(l => l.id === id ? { ...l, picked: clampInt(v, ENTRY_MAX) } : l));
     setDirty(true);
   };
 
@@ -353,18 +375,25 @@ export default function ReturnDraft() {
       {/* Add title (draft only) */}
       {isDraft && (
         <div className="relative max-w-md">
-          <input value={addSearch} onChange={e => setAddSearch(e.target.value)} placeholder="Add a title (search this publisher's stock)…"
+          <input value={addSearch} onChange={e => setAddSearch(e.target.value)} placeholder="Add a title (search this publisher's full list)…"
             className="w-full px-3 py-2 border rounded text-sm dark:bg-gray-800" />
           {addable.length > 0 && (
             <div className="absolute z-10 mt-1 w-full bg-white dark:bg-gray-800 border rounded shadow-lg max-h-64 overflow-auto">
               {addable.map(w => (
                 <button key={w.inventory_item_id} onClick={() => addLine(w)}
                   className="w-full text-left px-3 py-2 text-sm hover:bg-gray-100 dark:hover:bg-gray-700 border-b border-gray-100 dark:border-gray-700">
-                  {w.title} <span className="opacity-60">· {w.isbn} · {w.on_hand} on hand · {w.sales_12mo} sold 12mo</span>
+                  {w.title} <span className="opacity-60">· {w.isbn} · {w.on_hand > 0 ? `${w.on_hand} on hand` : 'none recorded on hand'} · {w.sales_12mo} sold 12mo</span>
                 </button>
               ))}
             </div>
           )}
+        </div>
+      )}
+
+      {snapshotAsOf && !isConfirmed && (
+        <div className="text-xs opacity-60">
+          On-hand figures as of {new Date(snapshotAsOf).toLocaleString()} — guidance, not a limit.
+          If stock has moved since, enter what you actually have.
         </div>
       )}
 
@@ -401,18 +430,25 @@ export default function ReturnDraft() {
                 <tr key={l.id} className="even:bg-gray-50 dark:even:bg-gray-700">
                   <td className="px-3 py-2 border-r border-gray-200 dark:border-gray-700">{l.title ?? '—'}</td>
                   <td className="px-3 py-2 border-r border-gray-200 dark:border-gray-700">{l.isbn ?? '—'}</td>
-                  {!isConfirmed && <td className="px-3 py-2 border-r border-gray-200 dark:border-gray-700 text-right">{l.on_hand || '—'}</td>}
+                  {!isConfirmed && (
+                    <td className="px-3 py-2 border-r border-gray-200 dark:border-gray-700 text-right">
+                      {l.on_hand || '—'}
+                      {overStock(l) && (
+                        <span className="ml-1 text-amber-600" title={`Return exceeds the last known on-hand (${l.on_hand}). That may well be right if stock moved since the snapshot — the pull sheet will confirm.`}>!</span>
+                      )}
+                    </td>
+                  )}
                   {isDraft && <td className="px-3 py-2 border-r border-gray-200 dark:border-gray-700 text-right">{l.sales_12mo}</td>}
                   {isDraft && (
                     <td className="px-3 py-2 border-r border-gray-200 dark:border-gray-700 text-right">
-                      <input type="number" min={0} max={l.on_hand || undefined} value={keep}
+                      <input type="number" min={0} max={ENTRY_MAX} value={keep}
                         onChange={e => setKeep(l.inventory_item_id, Number(e.target.value))}
                         className="w-16 px-2 py-1 border rounded text-right dark:bg-gray-800" />
                     </td>
                   )}
                   {isDraft && (
                     <td className="px-3 py-2 border-r border-gray-200 dark:border-gray-700 text-right">
-                      <input type="number" min={0} max={maxReturn(l)} value={l.requested}
+                      <input type="number" min={0} max={ENTRY_MAX} value={l.requested}
                         onChange={e => setReturn(l.inventory_item_id, Number(e.target.value))}
                         className="w-16 px-2 py-1 border rounded text-right font-semibold dark:bg-gray-800" />
                       <div className="mt-1 flex gap-1 justify-end">
@@ -424,7 +460,7 @@ export default function ReturnDraft() {
                   {isPicking && <td className="px-3 py-2 border-r border-gray-200 dark:border-gray-700 text-right tabular-nums">{l.requested}</td>}
                   {isPicking && (
                     <td className="px-3 py-2 border-r border-gray-200 dark:border-gray-700 text-right">
-                      <input type="number" min={0} max={l.requested} value={l.picked}
+                      <input type="number" min={0} max={ENTRY_MAX} value={l.picked}
                         onChange={e => setPicked(l.id, Number(e.target.value))}
                         className="w-16 px-2 py-1 border rounded text-right font-semibold dark:bg-gray-800" />
                       <div className="mt-1 flex gap-1 justify-end">
