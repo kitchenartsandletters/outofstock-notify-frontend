@@ -53,13 +53,14 @@ export default function ReturnDraft() {
 
   const [header, setHeader] = useState<ReturnIndexRow | null>(null);
   const [lines, setLines] = useState<EditLine[]>([]);
-  const [worksheet, setWorksheet] = useState<ReturnsWorksheetRow[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [notice, setNotice] = useState<string | null>(null);
   const [dirty, setDirty] = useState(false);
   const [busy, setBusy] = useState(false);
   const [addSearch, setAddSearch] = useState('');
+  const [addResults, setAddResults] = useState<ReturnsWorksheetRow[]>([]);
+  const [addSearching, setAddSearching] = useState(false);
   const [snapshotAsOf, setSnapshotAsOf] = useState<string | null>(null);
 
   // Manifest guarded flow
@@ -82,10 +83,11 @@ export default function ReturnDraft() {
       const st = detail.return.status;
       let byId = new Map<string, ReturnsWorksheetRow>();
       if (st === 'draft' || st === 'picking') {
-        // includeZeroStock: on_hand is a periodic snapshot, so a title transferred
-        // in today can still read 0 and would otherwise be unfindable and unaddable.
-        const ws = await fetchReturnsWorksheet(detail.return.supplier_party_id, { limit: 1000, includeZeroStock: true });
-        setWorksheet(ws.rows);
+        // In-stock rows only here: this list exists to attach live on_hand to the
+        // lines already on the return. The add-title search is served separately
+        // (see the effect below) because a big publisher's full catalogue runs to
+        // thousands of rows — PRH alone is ~3,300 — and cannot be loaded up front.
+        const ws = await fetchReturnsWorksheet(detail.return.supplier_party_id, { limit: 1000 });
         setSnapshotAsOf(ws.snapshot_as_of ?? null);
         byId = new Map(ws.rows.map(r => [r.inventory_item_id, r]));
       }
@@ -150,7 +152,7 @@ export default function ReturnDraft() {
       picked: w.suggested_return > 0 ? w.suggested_return : 1,
       confirmed: 0, inventory_adjusted: false,
     }]);
-    setAddSearch(''); setDirty(true);
+    setAddSearch(''); setAddResults([]); setDirty(true);
   };
 
   // ---- picking editing (picked count) ----
@@ -162,14 +164,37 @@ export default function ReturnDraft() {
   };
 
   const inDraft = useMemo(() => new Set(lines.map(l => l.inventory_item_id)), [lines]);
-  const addable = useMemo(() => {
-    const term = addSearch.trim().toLowerCase();
-    if (!term) return [];
-    return worksheet
-      .filter(w => !inDraft.has(w.inventory_item_id))
-      .filter(w => (w.title ?? '').toLowerCase().includes(term) || (w.isbn ?? '').toLowerCase().includes(term))
-      .slice(0, 8);
-  }, [addSearch, worksheet, inDraft]);
+
+  // Add-title search runs on the SERVER against the publisher's whole returnable
+  // list. It used to filter a locally-loaded page, which silently capped what
+  // could be found: Penguin Random House has ~3,300 catalogue rows and Hachette
+  // ~1,300, so with a 1,000-row load anything further down was unreachable and
+  // simply would not appear however it was spelled. Smaller publishers worked,
+  // which is what made it look like a per-publisher problem.
+  useEffect(() => {
+    const term = addSearch.trim();
+    if (!isDraft || term.length < 2 || !header) { setAddResults([]); return; }
+    let cancelled = false;
+    setAddSearching(true);
+    const t = setTimeout(async () => {
+      try {
+        const res = await fetchReturnsWorksheet(header.supplier_party_id, {
+          search: term, includeZeroStock: true, limit: 25,
+        });
+        if (!cancelled) setAddResults(res.rows);
+      } catch {
+        if (!cancelled) setAddResults([]);
+      } finally {
+        if (!cancelled) setAddSearching(false);
+      }
+    }, 300);
+    return () => { cancelled = true; clearTimeout(t); };
+  }, [addSearch, isDraft, header]);
+
+  const addable = useMemo(
+    () => addResults.filter(w => !inDraft.has(w.inventory_item_id)).slice(0, 8),
+    [addResults, inDraft]
+  );
 
   const totals = useMemo(() => {
     let units = 0, value = 0, count = 0;
@@ -377,6 +402,11 @@ export default function ReturnDraft() {
         <div className="relative max-w-md">
           <input value={addSearch} onChange={e => setAddSearch(e.target.value)} placeholder="Add a title (search this publisher's full list)…"
             className="w-full px-3 py-2 border rounded text-sm dark:bg-gray-800" />
+          {addSearch.trim().length >= 2 && (addSearching || addable.length === 0) && (
+            <div className="absolute z-10 mt-1 w-full bg-white dark:bg-gray-800 border rounded shadow-lg px-3 py-2 text-sm opacity-70">
+              {addSearching ? 'Searching…' : 'No match in this publisher’s returnable list.'}
+            </div>
+          )}
           {addable.length > 0 && (
             <div className="absolute z-10 mt-1 w-full bg-white dark:bg-gray-800 border rounded shadow-lg max-h-64 overflow-auto">
               {addable.map(w => (
