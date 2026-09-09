@@ -879,7 +879,12 @@ export default function ReceivingWizard() {
       isbn:                         l.isbn ?? null,
       quantity_ordered:             l.quantity_ordered,
       quantity_previously_received: l.quantity_received,
-      quantity_received:            l.quantity_ordered - l.quantity_received,
+      // Start at 0, not the full outstanding quantity. Pre-filling every line
+      // with "everything arrived" means a partial shipment has to be corrected
+      // line by line, and anything the receiver misses is silently received —
+      // which is how a title that never shipped ended up received in full.
+      // "Receive all" below makes the complete-shipment case one click.
+      quantity_received:            0,
       quantity_damaged:             0,
       damage_disposal:              null,
       damage_resolution:            null,
@@ -902,6 +907,23 @@ export default function ReceivingWizard() {
     setLines(prev => prev.map(l =>
       l.purchase_order_line_id === lineId ? { ...l, quantity_received: value } : l
     ))
+  }
+
+  // Bulk quantity controls. Receiving a single title from a long PO otherwise
+  // means zeroing every other line by hand; receiving everything otherwise
+  // means typing each quantity. Both only touch quantity_received — damaged
+  // counts and their resolutions are deliberately left alone, since those are
+  // per-line judgements a bulk action shouldn't overwrite.
+  function setAllReceived(mode: 'all' | 'none') {
+    setLines(prev => prev.map(l => {
+      const remaining = l.quantity_ordered - l.quantity_previously_received
+      return {
+        ...l,
+        quantity_received: mode === 'none'
+          ? 0
+          : Math.max(0, remaining - l.quantity_damaged),
+      }
+    }))
   }
 
   function handleDamageChange(
@@ -997,6 +1019,9 @@ export default function ReceivingWizard() {
 
   const order  = poDetail?.order as any
   const isTest = !!order?.is_test
+  // Lines the receiver has actually entered something for — drives the counter
+  // and disables "Clear all" when there is nothing to clear.
+  const enteredCount = lines.filter(l => l.quantity_received > 0 || l.quantity_damaged > 0).length
 
   return (
     <div className="space-y-6 max-w-2xl">
@@ -1056,6 +1081,28 @@ export default function ReceivingWizard() {
           </div>
 
           {lines.length > 0 && <WizardSlipScanner lines={lines} onLinesUpdated={handleScanUpdate} />}
+
+          {lines.length > 1 && (
+            <div className="flex items-center justify-between gap-3 px-1">
+              <p className="text-[11px] text-gray-400 dark:text-gray-500">
+                {enteredCount} of {lines.length} line{lines.length !== 1 ? 's' : ''} with a quantity
+              </p>
+              <div className="flex gap-2">
+                <button type="button" onClick={() => setAllReceived('all')}
+                  className="px-2.5 py-1.5 rounded border border-gray-300 dark:border-gray-600 text-[11px] font-semibold
+                             text-gray-600 dark:text-gray-300 hover:bg-white dark:hover:bg-gray-800 transition-colors">
+                  Receive all
+                </button>
+                <button type="button" onClick={() => setAllReceived('none')}
+                  disabled={enteredCount === 0}
+                  className="px-2.5 py-1.5 rounded border border-gray-300 dark:border-gray-600 text-[11px] font-semibold
+                             text-gray-600 dark:text-gray-300 hover:bg-white dark:hover:bg-gray-800
+                             disabled:opacity-40 transition-colors">
+                  Clear all
+                </button>
+              </div>
+            </div>
+          )}
 
           <div className="space-y-3">
             {lines.map(l => (
