@@ -16,7 +16,7 @@ const STATUS_STYLE: Record<ReturnStatus, string> = {
   draft: 'bg-gray-200 text-gray-700 dark:bg-gray-700 dark:text-gray-200',
   picking: 'bg-blue-100 text-blue-700 dark:bg-blue-900/50 dark:text-blue-300',
   confirmed: 'bg-green-100 text-green-700 dark:bg-green-900/50 dark:text-green-300',
-  shipped: 'bg-green-100 text-green-700 dark:bg-green-900/50 dark:text-green-300',
+  shipped: 'bg-emerald-100 text-emerald-800 dark:bg-emerald-900/50 dark:text-emerald-300',
   cancelled: 'bg-red-100 text-red-700 dark:bg-red-900/50 dark:text-red-300',
 };
 
@@ -31,6 +31,10 @@ export default function ReturnsWorkspace() {
   const [error, setError] = useState<string | null>(null);
   const [creatingId, setCreatingId] = useState<string | null>(null);
   const [pickerOpen, setPickerOpen] = useState(false);
+  // Publisher chosen but not yet started: we ask how to begin rather than
+  // assuming. Seeding 44 suggested lines onto someone who wanted to add three
+  // titles by hand is a chore to undo, and produced abandoned drafts.
+  const [pending, setPending] = useState<ReturnsPublisherTile | null>(null);
 
   useEffect(() => {
     Promise.all([fetchReturnsList(), fetchReturnsPublishers()])
@@ -42,16 +46,17 @@ export default function ReturnsWorkspace() {
   const open = returns.filter(r => OPEN.includes(r.status));
   const completed = returns.filter(r => DONE.includes(r.status));
 
-  const start = async (publisherId: string) => {
+  const start = async (publisherId: string, seed: boolean) => {
     if (creatingId) return;
     setCreatingId(publisherId);
     setError(null);
     try {
-      const detail = await createReturn({ publisher_id: publisherId });
+      const detail = await createReturn({ publisher_id: publisherId, seed });
       navigate(`/supply-chain/returns/${detail.return.id}`);
     } catch (e) {
       setError(e instanceof Error ? e.message : 'Failed to create return');
       setCreatingId(null);
+      setPending(null);
     }
   };
 
@@ -97,7 +102,7 @@ export default function ReturnsWorkspace() {
               <button
                 key={t.publisher_party_id}
                 disabled={!!creatingId}
-                onClick={() => start(t.publisher_party_id)}
+                onClick={() => setPending(t)}
                 className="text-left px-3 py-2 border rounded text-sm hover:border-blue-400 disabled:opacity-50"
               >
                 {t.publisher_name}
@@ -133,7 +138,7 @@ export default function ReturnsWorkspace() {
           {/* Suggested next returns */}
           <section>
             <h3 className="text-sm font-semibold uppercase tracking-wide opacity-60 mb-2">Suggested next returns</h3>
-            <p className="text-xs opacity-60 mb-3 max-w-3xl">Where excess is building up against the last 12 months of sales. Click one to open a draft — you adjust every line inside.</p>
+            <p className="text-xs opacity-60 mb-3 max-w-3xl">Where excess is building up against the last 12 months of sales. Pick one and choose whether to start from those suggestions or from a blank sheet.</p>
             {tiles.length === 0 ? (
               <div className="text-sm opacity-60">No returnable publishers with excess stock.</div>
             ) : (
@@ -142,7 +147,7 @@ export default function ReturnsWorkspace() {
                   <button
                     key={t.publisher_party_id}
                     disabled={!!creatingId}
-                    onClick={() => start(t.publisher_party_id)}
+                    onClick={() => setPending(t)}
                     className="text-left rounded-lg border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800 p-4 hover:shadow-md hover:border-blue-400 transition-all disabled:opacity-50"
                   >
                     <div className="flex items-start justify-between gap-2">
@@ -160,6 +165,50 @@ export default function ReturnsWorkspace() {
             )}
           </section>
         </>
+      )}
+
+      {/* How to begin: seeded from the suggestion, or empty. */}
+      {pending && (
+        <div className="fixed inset-0 z-50 bg-black/40 flex items-center justify-center p-4"
+             onClick={() => !creatingId && setPending(null)}>
+          <div className="bg-white dark:bg-gray-800 rounded-lg shadow-xl max-w-md w-full p-5"
+               onClick={e => e.stopPropagation()}>
+            <h3 className="text-lg font-semibold mb-1">New return — {pending.publisher_name}</h3>
+            <p className="text-sm opacity-70 mb-4">How would you like to start?</p>
+
+            <div className="space-y-2">
+              <button
+                disabled={!!creatingId}
+                onClick={() => start(pending.publisher_party_id, true)}
+                className="w-full text-left border rounded p-3 hover:border-blue-400 disabled:opacity-50"
+              >
+                <div className="font-medium text-sm">Start from the suggestion</div>
+                <div className="text-xs opacity-60">
+                  {pending.titles_with_excess} titles · {pending.return_units} units · {money(pending.return_value_list)} —
+                  everything with excess against the last 12 months. Adjust or remove any line.
+                </div>
+              </button>
+
+              <button
+                disabled={!!creatingId}
+                onClick={() => start(pending.publisher_party_id, false)}
+                className="w-full text-left border rounded p-3 hover:border-blue-400 disabled:opacity-50"
+              >
+                <div className="font-medium text-sm">Start blank</div>
+                <div className="text-xs opacity-60">
+                  No lines. Add titles yourself by title or ISBN — for a short, deliberate return.
+                </div>
+              </button>
+            </div>
+
+            <div className="flex justify-end mt-4">
+              <button disabled={!!creatingId} onClick={() => setPending(null)}
+                className="border px-4 py-1.5 rounded text-sm disabled:opacity-50">
+                {creatingId ? 'Creating…' : 'Cancel'}
+              </button>
+            </div>
+          </div>
+        </div>
       )}
     </div>
   );
