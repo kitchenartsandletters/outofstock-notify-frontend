@@ -307,11 +307,15 @@ export default function ReturnDraft() {
       <td class="r">${i.list_price == null ? '—' : '$' + Number(i.list_price).toFixed(2)}</td>
       <td class="r">${i.quantity}</td></tr>`).join('');
     const reason = pl.reason === 'overstock_author_event' ? 'Overstock – author event' : 'Overstock';
+    // ship_to_name is the addressee and ship_to_address the street lines; they
+    // no longer repeat each other, so render one then the other.
+    const shipTo = [pl.ship_to_name, pl.ship_to_address].filter(Boolean).join('\n');
     const html = `<!doctype html><html><head><meta charset="utf-8"><title>Return ${esc(pl.return_number)}</title>
       <style>
         body{font:13px/1.4 -apple-system,Segoe UI,Roboto,sans-serif;color:#111;margin:40px;}
         h1{font-size:18px;margin:0;} .sub{color:#555;margin:2px 0 16px;}
         .head{display:flex;justify-content:space-between;align-items:flex-start;border-bottom:2px solid #111;padding-bottom:10px;}
+        .rn{font-size:11px;text-transform:uppercase;color:#666;letter-spacing:.04em;}
         .meta{margin:16px 0;display:grid;grid-template-columns:1fr 1fr;gap:6px 24px;}
         .meta div span{color:#666;display:block;font-size:11px;text-transform:uppercase;}
         table{width:100%;border-collapse:collapse;margin-top:12px;}
@@ -322,7 +326,9 @@ export default function ReturnDraft() {
       </style></head><body>
       <div class="head">
         <div><h1>Kitchen Arts &amp; Letters, Inc.</h1><div class="sub">Publisher Return</div></div>
-        <div style="text-align:right"><div class="mono"><b>${esc(pl.return_number)}</b></div>
+        <div style="text-align:right">
+          <div class="rn">Return Number</div>
+          <div class="mono"><b>${esc(pl.return_number)}</b></div>
           <div class="sub">${new Date(pl.created_at).toLocaleDateString()}</div></div>
       </div>
       <div class="meta">
@@ -330,7 +336,7 @@ export default function ReturnDraft() {
         <div><span>Account #</span>${esc(pl.account_number) || '—'}</div>
         <div><span>Reason</span>${reason}</div>
         <div><span>Units / Titles</span>${pl.total_units} / ${pl.items.length}</div>
-        <div style="grid-column:1 / -1"><span>Return to</span><span class="addr" style="color:#111;text-transform:none;font-size:13px;">${esc(pl.ship_to_name ? pl.ship_to_name + '\n' : '')}${esc(pl.ship_to_address)}</span></div>
+        <div style="grid-column:1 / -1"><span>Return to</span><span class="addr" style="color:#111;text-transform:none;font-size:13px;">${esc(shipTo)}</span></div>
       </div>
       <table><thead><tr><th>Title</th><th>ISBN</th><th class="r">List price</th><th class="r">Qty</th></tr></thead>
       <tbody>${rows}</tbody>
@@ -358,7 +364,9 @@ export default function ReturnDraft() {
       <div className="flex flex-col lg:flex-row lg:items-start lg:justify-between gap-3">
         <div>
           <h2 className="text-xl font-semibold">{header.publisher_name ?? 'Return'}</h2>
-          <span className="text-sm opacity-70"><span className="font-mono">{header.return_number}</span> · {statusBadge}</span>
+          <span className="text-sm opacity-70">
+            Return Number: <span className="font-mono">{header.return_number}</span> · {statusBadge}
+          </span>
         </div>
         <div className="flex gap-2 items-center flex-wrap">
           {dirty && <span className="text-xs text-amber-600">unsaved changes</span>}
@@ -393,7 +401,11 @@ export default function ReturnDraft() {
         </label>
         <div className="flex flex-col gap-1 lg:col-span-2">
           <span className="text-xs uppercase opacity-60">Return to</span>
-          <div className="text-xs whitespace-pre-line opacity-80">{header.ship_to_name ? header.ship_to_name + '\n' : ''}{header.ship_to_address ?? 'No default return address set in Supply Chain.'}</div>
+          {/* recipient then street lines — the two no longer repeat each other */}
+          <div className="text-xs whitespace-pre-line opacity-80">
+            {[header.ship_to_name, header.ship_to_address].filter(Boolean).join('\n')
+              || 'No default return address set in Supply Chain.'}
+          </div>
         </div>
       </div>
 
