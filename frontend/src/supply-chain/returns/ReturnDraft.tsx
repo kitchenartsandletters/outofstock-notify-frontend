@@ -336,6 +336,94 @@ export default function ReturnDraft() {
   const armUndo = () => { setUndoLeft(5); setStage('undo'); };
   const abortManifest = () => { setStage(null); setSummary(null); };
 
+  // A paper worksheet for the floor. Deliberately NOT the packing list: it is
+  // headed as a worksheet, carries a write-in Picked column, and says plainly
+  // that nothing is committed until the counts are entered back in and the
+  // manifest is run. Someone finding this sheet on a bench should not mistake
+  // it for the document that goes in the box.
+  const printPullSheet = () => {
+    if (!header) return;
+    const rows = lines
+      .filter(l => l.requested > 0)
+      .map(l => `<tr>
+        <td>${esc(l.title)}</td>
+        <td class="mono">${esc(l.isbn) || '<span class="muted">no ISBN</span>'}</td>
+        <td class="r">${l.on_hand || '—'}</td>
+        <td class="r plan">${l.requested}</td>
+        <td class="box"></td>
+      </tr>`).join('');
+    const planned = lines.reduce((n, l) => n + (l.requested > 0 ? l.requested : 0), 0);
+    const titles = lines.filter(l => l.requested > 0).length;
+
+    const html = `<!doctype html><html><head><meta charset="utf-8"><title>Pull sheet ${esc(header.return_number)}</title>
+      <style>
+        body{font:13px/1.45 -apple-system,Segoe UI,Roboto,sans-serif;color:#111;margin:32px;}
+        .banner{border:2px solid #111;padding:8px 12px;margin-bottom:14px;}
+        .banner b{font-size:15px;letter-spacing:.02em;}
+        .banner div{font-size:11px;color:#444;margin-top:2px;}
+        .head{display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:10px;}
+        h1{font-size:17px;margin:0;}
+        .sub{color:#555;font-size:12px;}
+        .rn{font-size:11px;text-transform:uppercase;color:#666;letter-spacing:.04em;}
+        table{width:100%;border-collapse:collapse;margin-top:8px;}
+        th,td{border-bottom:1px solid #ccc;padding:7px 8px;text-align:left;vertical-align:top;}
+        th{font-size:11px;text-transform:uppercase;color:#555;border-bottom:1.5px solid #111;}
+        th.r,td.r{text-align:right;} .mono{font-family:ui-monospace,monospace;font-size:12px;}
+        .muted{color:#999;font-style:italic;}
+        .plan{font-weight:bold;}
+        .box{width:64px;border-bottom:1px solid #ccc;border-left:1px solid #ccc;background:#fafafa;}
+        tfoot td{font-weight:bold;border-top:1.5px solid #111;}
+        .sign{margin-top:22px;display:flex;gap:32px;font-size:12px;color:#444;}
+        .sign div{flex:1;border-top:1px solid #999;padding-top:4px;}
+        @media print{ body{margin:14mm;} .box{background:none;} }
+      </style></head><body>
+      <div class="banner">
+        <b>PULL SHEET — WORKSHEET ONLY</b>
+        <div>Not a packing list and not a manifest. Nothing is returned and no inventory changes
+        until these counts are entered back into the return and the manifest is run.</div>
+      </div>
+
+      <div class="head">
+        <div>
+          <h1>${esc(header.publisher_name)}</h1>
+          <div class="sub">Kitchen Arts &amp; Letters · printed ${new Date().toLocaleString()}</div>
+        </div>
+        <div style="text-align:right">
+          <div class="rn">Return Number</div>
+          <div class="mono"><b>${esc(header.return_number)}</b></div>
+          <div class="sub">${titles} titles · ${planned} units planned</div>
+        </div>
+      </div>
+
+      <table>
+        <thead><tr>
+          <th>Title</th><th>ISBN</th><th class="r">On hand</th>
+          <th class="r">Planned</th><th class="r">Picked</th>
+        </tr></thead>
+        <tbody>${rows}</tbody>
+        <tfoot><tr>
+          <td colspan="3" class="r">Planned total</td>
+          <td class="r">${planned}</td><td class="box"></td>
+        </tr></tfoot>
+      </table>
+
+      <p style="font-size:11px;color:#555;margin-top:10px;">
+        Write the count you actually pull in the last column. Enter <b>0</b> for anything you
+        cannot find — that is useful information, not a mistake, and it corrects the shelf count.
+        On-hand figures were last refreshed ${snapshotAsOf ? new Date(snapshotAsOf).toLocaleString() : 'recently'}
+        and may be behind the shelf.
+      </p>
+
+      <div class="sign">
+        <div>Pulled by</div><div>Date</div><div>Checked by</div>
+      </div>
+      </body></html>`;
+
+    const w = window.open('', '_blank', 'width=800,height=900');
+    if (!w) { setError('Popup blocked — allow popups to print the pull sheet.'); return; }
+    w.document.write(html); w.document.close(); w.focus(); w.print();
+  };
+
   const printPackingList = (pl: PackingList) => {
     const rows = pl.items.map(i => `<tr>
       <td>${esc(i.title)}</td><td class="mono">${esc(i.isbn)}</td>
@@ -417,6 +505,7 @@ export default function ReturnDraft() {
           {isDraft && <button onClick={saveDraft} disabled={busy || !dirty} className="border px-4 py-1 rounded text-sm disabled:opacity-50">{busy ? '…' : 'Save draft'}</button>}
           {isDraft && <button onClick={beginPick} disabled={busy || dirty} title={dirty ? 'Save changes first' : ''} className="bg-blue-600 hover:bg-blue-700 text-white px-4 py-1 rounded text-sm disabled:opacity-50">Start pull sheet →</button>}
           {isPicking && <button onClick={cancelThis} className="border border-red-300 text-red-600 px-3 py-1 rounded text-sm hover:bg-red-50">Cancel return</button>}
+          {isPicking && <button onClick={printPullSheet} className="border px-4 py-1 rounded text-sm">Print pull sheet</button>}
           {isPicking && <button onClick={savePicked} disabled={busy || !dirty} className="border px-4 py-1 rounded text-sm disabled:opacity-50">Save pull counts</button>}
           {isPicking && <button onClick={openManifest} disabled={busy} className="bg-green-600 hover:bg-green-700 text-white px-4 py-1 rounded text-sm disabled:opacity-50">Create manifest →</button>}
           {isConfirmed && packing && <button onClick={() => printPackingList(packing)} className="bg-blue-600 hover:bg-blue-700 text-white px-4 py-1 rounded text-sm">Print packing list</button>}
