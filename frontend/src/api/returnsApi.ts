@@ -30,6 +30,24 @@ function qs(params: Record<string, string | number | boolean | undefined | null>
 export type ReturnStatus = 'draft' | 'picking' | 'confirmed' | 'shipped' | 'cancelled'
 export type ReturnReason = 'overstock' | 'overstock_author_event'
 
+// Carriers we can link a tracking number for. Anything else is allowed and
+// simply shown as text — recording what happened matters more than a tidy list.
+export const CARRIERS = ['UPS', 'FedEx', 'USPS', 'DHL', 'Other'] as const
+
+const TRACKING_URLS: Record<string, string> = {
+  UPS: 'https://www.ups.com/track?tracknum={n}',
+  FEDEX: 'https://www.fedex.com/fedextrack/?trknbr={n}',
+  USPS: 'https://tools.usps.com/go/TrackConfirmAction?tLabels={n}',
+  DHL: 'https://www.dhl.com/us-en/home/tracking.html?tracking-id={n}',
+}
+
+/** Tracking link for a carrier, or null when we have no URL pattern for it. */
+export function trackingUrl(carrier?: string | null, number?: string | null): string | null {
+  if (!carrier || !number) return null
+  const tpl = TRACKING_URLS[carrier.trim().toUpperCase()]
+  return tpl ? tpl.replace('{n}', encodeURIComponent(number.trim())) : null
+}
+
 // --- Suggestion side (tiles + per-publisher suggested lines) ---------------
 
 export interface ReturnsPublisherTile {
@@ -39,6 +57,7 @@ export interface ReturnsPublisherTile {
   payment_terms: string | null
   default_return_address: string | null
   default_return_recipient: string | null
+  default_return_account: string | null
   titles: number
   titles_with_excess: number
   on_hand_units: number
@@ -122,6 +141,8 @@ export interface ReturnIndexRow {
   confirmed_units: number
   requested_value: number
   confirmed_value: number
+  carrier: string | null
+  tracking_number: string | null
 }
 
 export interface ReturnLine {
@@ -143,6 +164,7 @@ export interface ReturnLine {
 export interface ReturnDetail {
   return: ReturnIndexRow
   lines: ReturnLine[]
+  tracking_url?: string | null
 }
 
 export interface LineInput {
@@ -192,7 +214,7 @@ export async function deleteReturn(id: string): Promise<{ deleted: boolean; id: 
   return sc(`/api/reporting/returns/${id}`, { method: 'DELETE' })
 }
 
-// --- Fulfillment (pull sheet -> manifest -> confirmed) ---------------------
+// --- Fulfillment (pull sheet -> manifest -> shipped) -----------------------
 
 export interface ManifestDelta {
   title: string | null
@@ -228,6 +250,9 @@ export interface PackingList {
   status: ReturnStatus
   created_at: string
   shipped_at: string | null
+  carrier?: string | null
+  tracking_number?: string | null
+  tracking_url?: string | null
   items: PackingListItem[]
   total_units: number
   total_value: number
@@ -246,6 +271,12 @@ export interface PickLineInput {
   quantity_picked: number
 }
 
+export interface ShippingInput {
+  carrier?: string | null
+  tracking_number?: string | null
+  shipped_at?: string | null
+}
+
 export async function startPick(id: string): Promise<ReturnDetail> {
   return sc(`/api/reporting/returns/${id}/start-pick`, { method: 'POST' })
 }
@@ -260,6 +291,11 @@ export async function manifestPreview(id: string): Promise<{ dry_run: true; summ
 
 export async function manifestReturn(id: string): Promise<ManifestResult> {
   return sc(`/api/reporting/returns/${id}/manifest`, { method: 'POST', body: JSON.stringify({ dry_run: false }) })
+}
+
+/** Record carrier + tracking on a confirmed return; moves it to shipped. */
+export async function setShipping(id: string, body: ShippingInput): Promise<ReturnDetail> {
+  return sc(`/api/reporting/returns/${id}/shipping`, { method: 'PUT', body: JSON.stringify(body) })
 }
 
 export async function fetchPackingList(id: string): Promise<PackingList> {

@@ -1,9 +1,10 @@
 // src/supply-chain/returns/ReturnDraft.tsx
 // The returns detail page — renders by status across the whole lifecycle:
-//   draft    → curate keep/return, add titles, save
-//   picking  → pull sheet: record what was physically pulled (0 = phantom),
-//              then manifest behind a guarded confirm flow
-//   confirmed/shipped → read-only + printable packing list
+//   draft     → curate keep/return, add titles, save
+//   picking   → pull sheet: record what was physically pulled (0 = phantom),
+//               then manifest behind a guarded confirm flow
+//   confirmed → read-only, printable packing list, and record how it shipped
+//   shipped   → the same, with carrier + tracking filled in
 //
 // on_hand comes from the periodic snapshot, NOT a live Shopify read. A title
 // transferred into the store this morning can still show 0 until the snapshot
@@ -19,6 +20,7 @@ import { useParams, useNavigate, Link } from 'react-router-dom';
 import {
   fetchReturn, fetchReturnsWorksheet, saveReturn, deleteReturn,
   startPick, savePick, manifestPreview, manifestReturn, fetchPackingList, cancelReturn,
+  setShipping, trackingUrl, CARRIERS,
   ReturnIndexRow, ReturnsWorksheetRow, ReturnReason, ManifestSummary, PackingList,
 } from '../../api/returnsApi';
 
@@ -63,6 +65,11 @@ export default function ReturnDraft() {
   const [addSearching, setAddSearching] = useState(false);
   const [snapshotAsOf, setSnapshotAsOf] = useState<string | null>(null);
 
+  // Shipping (confirmed onwards)
+  const [carrier, setCarrier] = useState('');
+  const [tracking, setTracking] = useState('');
+  const [shipBusy, setShipBusy] = useState(false);
+
   // Manifest guarded flow
   type Stage = null | 'summary' | 'confirm' | 'undo' | 'running';
   const [stage, setStage] = useState<Stage>(null);
@@ -73,7 +80,8 @@ export default function ReturnDraft() {
   const status = header?.status;
   const isDraft = status === 'draft';
   const isPicking = status === 'picking';
-  const isConfirmed = status === 'confirmed' || status === 'shipped';
+  const isShipped = status === 'shipped';
+  const isConfirmed = status === 'confirmed' || isShipped;
 
   const load = useCallback(async () => {
     setLoading(true);
@@ -110,6 +118,8 @@ export default function ReturnDraft() {
         };
       }));
       setHeader(detail.return);
+      setCarrier(detail.return.carrier ?? '');
+      setTracking(detail.return.tracking_number ?? '');
       setDirty(false);
       if (st === 'confirmed' || st === 'shipped') {
         try { setPacking(await fetchPackingList(returnId)); } catch { /* non-fatal */ }
@@ -169,8 +179,7 @@ export default function ReturnDraft() {
   // list. It used to filter a locally-loaded page, which silently capped what
   // could be found: Penguin Random House has ~3,300 catalogue rows and Hachette
   // ~1,300, so with a 1,000-row load anything further down was unreachable and
-  // simply would not appear however it was spelled. Smaller publishers worked,
-  // which is what made it look like a per-publisher problem.
+  // simply would not appear however it was spelled.
   useEffect(() => {
     const term = addSearch.trim();
     if (!isDraft || term.length < 2 || !header) { setAddResults([]); return; }
@@ -255,6 +264,32 @@ export default function ReturnDraft() {
     catch (e) { setError(e instanceof Error ? e.message : 'Failed to cancel'); }
   };
 
+  // ---- shipping ----
+  const shipDirty =
+    (carrier || '') !== (header?.carrier ?? '') ||
+    (tracking || '') !== (header?.tracking_number ?? '');
+
+  const saveShipping = async () => {
+    setShipBusy(true); setError(null);
+    try {
+      const updated = await setShipping(returnId, {
+        carrier: carrier || null,
+        tracking_number: tracking || null,
+      });
+      setHeader(updated.return);
+      setCarrier(updated.return.carrier ?? '');
+      setTracking(updated.return.tracking_number ?? '');
+      setNotice(updated.return.tracking_number
+        ? 'Shipping recorded — this return is marked shipped.'
+        : 'Tracking cleared — back to confirmed.');
+      try { setPacking(await fetchPackingList(returnId)); } catch { /* non-fatal */ }
+    } catch (e) {
+      setError(e instanceof Error ? e.message : 'Failed to save shipping details');
+    } finally {
+      setShipBusy(false);
+    }
+  };
+
   // ---- manifest guarded flow ----
   const openManifest = async () => {
     if (dirty) { setError('Save your pull counts before creating the manifest.'); return; }
@@ -307,9 +342,12 @@ export default function ReturnDraft() {
       <td class="r">${i.list_price == null ? '—' : '$' + Number(i.list_price).toFixed(2)}</td>
       <td class="r">${i.quantity}</td></tr>`).join('');
     const reason = pl.reason === 'overstock_author_event' ? 'Overstock – author event' : 'Overstock';
-    // ship_to_name is the addressee and ship_to_address the street lines; they
-    // no longer repeat each other, so render one then the other.
+    // ship_to_name is the addressee (may be multi-line) and ship_to_address the
+    // street lines; they no longer repeat each other.
     const shipTo = [pl.ship_to_name, pl.ship_to_address].filter(Boolean).join('\n');
+    const shipRow = pl.tracking_number
+      ? `<div><span>Shipped via</span>${esc(pl.carrier || '—')} ${esc(pl.tracking_number)}</div>`
+      : '';
     const html = `<!doctype html><html><head><meta charset="utf-8"><title>Return ${esc(pl.return_number)}</title>
       <style>
         body{font:13px/1.4 -apple-system,Segoe UI,Roboto,sans-serif;color:#111;margin:40px;}
@@ -336,6 +374,7 @@ export default function ReturnDraft() {
         <div><span>Account #</span>${esc(pl.account_number) || '—'}</div>
         <div><span>Reason</span>${reason}</div>
         <div><span>Units / Titles</span>${pl.total_units} / ${pl.items.length}</div>
+        ${shipRow}
         <div style="grid-column:1 / -1"><span>Return to</span><span class="addr" style="color:#111;text-transform:none;font-size:13px;">${esc(shipTo)}</span></div>
       </div>
       <table><thead><tr><th>Title</th><th>ISBN</th><th class="r">List price</th><th class="r">Qty</th></tr></thead>
@@ -353,9 +392,13 @@ export default function ReturnDraft() {
 
   const statusBadge = (
     <span className={`text-[11px] uppercase px-2 py-0.5 rounded ${
-      isConfirmed ? 'bg-green-100 text-green-700' : isPicking ? 'bg-blue-100 text-blue-700' :
+      isShipped ? 'bg-emerald-100 text-emerald-800' :
+      status === 'confirmed' ? 'bg-green-100 text-green-700' :
+      isPicking ? 'bg-blue-100 text-blue-700' :
       status === 'cancelled' ? 'bg-red-100 text-red-700' : 'bg-gray-200 text-gray-700'}`}>{status}</span>
   );
+
+  const liveTrackingUrl = trackingUrl(carrier, tracking);
 
   return (
     <div className="space-y-4">
@@ -401,13 +444,65 @@ export default function ReturnDraft() {
         </label>
         <div className="flex flex-col gap-1 lg:col-span-2">
           <span className="text-xs uppercase opacity-60">Return to</span>
-          {/* recipient then street lines — the two no longer repeat each other */}
+          {/* addressee then street lines — the two no longer repeat each other */}
           <div className="text-xs whitespace-pre-line opacity-80">
             {[header.ship_to_name, header.ship_to_address].filter(Boolean).join('\n')
               || 'No default return address set in Supply Chain.'}
           </div>
         </div>
       </div>
+
+      {/* Shipping — once the inventory is adjusted and the boxes go out */}
+      {isConfirmed && (
+        <div className="border rounded-md p-4 space-y-3">
+          <div className="flex items-center justify-between gap-2">
+            <h3 className="font-semibold text-sm">Shipping</h3>
+            {header.shipped_at && (
+              <span className="text-xs opacity-60">Shipped {new Date(header.shipped_at).toLocaleDateString()}</span>
+            )}
+          </div>
+
+          <div className="flex flex-wrap gap-3 items-end">
+            <label className="flex flex-col gap-1 text-sm">
+              <span className="text-xs uppercase opacity-60">Carrier</span>
+              <select value={carrier} onChange={e => setCarrier(e.target.value)}
+                className="px-2 py-1 border rounded dark:bg-gray-800 min-w-[8rem]">
+                <option value="">—</option>
+                {CARRIERS.map(c => <option key={c} value={c}>{c}</option>)}
+              </select>
+            </label>
+
+            <label className="flex flex-col gap-1 text-sm flex-1 min-w-[16rem]">
+              <span className="text-xs uppercase opacity-60">Tracking number</span>
+              <input value={tracking} onChange={e => setTracking(e.target.value)}
+                placeholder="e.g. 1Z…"
+                className="px-2 py-1 border rounded font-mono dark:bg-gray-800" />
+            </label>
+
+            <button onClick={saveShipping} disabled={shipBusy || !shipDirty}
+              className="bg-blue-600 hover:bg-blue-700 text-white px-4 py-1.5 rounded text-sm disabled:opacity-50">
+              {shipBusy ? 'Saving…' : 'Save shipping'}
+            </button>
+          </div>
+
+          {header.tracking_number ? (
+            <div className="text-sm">
+              {header.carrier && <span className="opacity-70">{header.carrier} · </span>}
+              {liveTrackingUrl ? (
+                <a href={liveTrackingUrl} target="_blank" rel="noreferrer"
+                   className="font-mono text-blue-600 hover:underline">{header.tracking_number}</a>
+              ) : (
+                <span className="font-mono">{header.tracking_number}</span>
+              )}
+            </div>
+          ) : (
+            <div className="text-xs opacity-60">
+              Not shipped yet. Adding a tracking number marks this return shipped; clearing it
+              puts it back to confirmed.
+            </div>
+          )}
+        </div>
+      )}
 
       {/* Add title (draft only) */}
       {isDraft && (
