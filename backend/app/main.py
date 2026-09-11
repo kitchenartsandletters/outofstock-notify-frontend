@@ -4,6 +4,7 @@ from app.routes.interest import router as interest_router
 from app.routes.reports import router as reports_router
 from app.routes.campaign_stats import router as campaign_stats_router
 from app.routes.campaign_responses import router as campaign_responses_router
+from app.routes.notes import router as notes_router
 
 app = FastAPI()
 
@@ -23,3 +24,4 @@ app.include_router(interest_router, prefix="/api")
 app.include_router(reports_router, prefix="/api")
 app.include_router(campaign_stats_router, prefix="/api")
 app.include_router(campaign_responses_router, prefix="/api")
+app.include_router(notes_router, prefix="/api")
