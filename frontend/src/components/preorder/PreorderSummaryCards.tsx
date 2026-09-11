@@ -218,6 +218,9 @@ const PreorderSummaryCards: React.FC<PreorderSummaryCardsProps> = ({
       setShowLateArrivals(true)
     } catch (err) {
       console.error("Failed to fetch late arrivals", err)
+      // Still expand so the empty-state renders instead of the panel looking inert.
+      setLateArrivals([])
+      setShowLateArrivals(true)
     } finally {
       setLoadingLate(false)
     }
@@ -619,6 +622,14 @@ const PreorderSummaryCards: React.FC<PreorderSummaryCardsProps> = ({
                     </div>
                   )
                 })}
+              </div>
+            )}
+
+            {showLateArrivals && lateArrivals.length === 0 && !loadingLate && (
+              <div className="mt-2 border-t border-amber-200 dark:border-amber-700 pt-2">
+                <span className="text-xs text-amber-400">
+                  No late-arrival details to show. If the count persists, refresh — the list and count may be briefly out of sync.
+                </span>
               </div>
             )}
           </div>
