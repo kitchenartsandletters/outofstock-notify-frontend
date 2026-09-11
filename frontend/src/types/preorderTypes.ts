@@ -68,6 +68,11 @@ export interface ReleaseReviewRow {
 
   inventory: number | null
 
+  // Arrival receipt signal — live inventory_arrival record. Drives the
+  // three-state stock label (Received · oversold when inventory <= 0 but stock
+  // did arrive). Optional: older backend responses may omit it.
+  arrival_record_is_live?: boolean
+
   // Release queue flags
   due_for_release_review: boolean
   early_stock_arrival: boolean

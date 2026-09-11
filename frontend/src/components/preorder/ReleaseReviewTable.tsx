@@ -2,7 +2,7 @@ import React, { useState, useMemo } from "react"
 import { ReleaseReviewRow, ReportablePreorderRow } from "../../types/preorderTypes"
 import { generateReportPreview, queueForReport } from "../../../api/preorderApi"
 import {
-  sortTitle, formatDate, stockReceivedLabel, toISODate,
+  sortTitle, formatDate, stockStatusLabel, toISODate,
   SortConfig, SortIcon, nextSortDirection
 } from "../../utils/tableUtils"
 
@@ -20,6 +20,30 @@ function ConfidenceBadge({ confidence }: { confidence: "verified" | "estimated" 
         : "bg-amber-100 text-amber-700 dark:bg-amber-900/40 dark:text-amber-300"
     }`}>
       {confidence === "verified" ? "✓" : "~"} {confidence}
+    </span>
+  )
+}
+
+// Three-state stock pill for the Upcoming section.
+//  in_hand           → emerald ✓ "Stock in hand"
+//  received_oversold → amber   ⚠ "Received · oversold"  (stock arrived, demand exceeds it — caution)
+//  awaiting          → gray    ○ "Awaiting stock"
+function StockStatusPill({ inventory, arrivalRecordIsLive }: {
+  inventory: number
+  arrivalRecordIsLive: boolean | null | undefined
+}) {
+  const stock = stockStatusLabel(inventory, arrivalRecordIsLive)
+  const cls =
+    stock.state === "in_hand"
+      ? "bg-emerald-100 text-emerald-700 dark:bg-emerald-900/40 dark:text-emerald-300"
+      : stock.state === "received_oversold"
+      ? "bg-amber-100 text-amber-700 dark:bg-amber-900/40 dark:text-amber-300"
+      : "bg-gray-100 text-gray-500 dark:bg-gray-800 dark:text-gray-400"
+  const glyph =
+    stock.state === "in_hand" ? "✓" : stock.state === "received_oversold" ? "⚠" : "○"
+  return (
+    <span className={`inline-flex items-center gap-1 text-[10px] font-medium px-2 py-0.5 rounded ${cls}`}>
+      {glyph} {stock.label}
     </span>
   )
 }
@@ -228,7 +252,6 @@ const ReleaseReviewTable: React.FC<ReleaseReviewTableProps> = ({
 
               {sortedUpcoming.map((row) => {
                 const days = daysUntil(row.pub_date)
-                const stock = stockReceivedLabel(row.inventory ?? 0, row.arrival_timing)
                 return (
                   <div key={row.product_id} className="p-4 rounded-xl border border-gray-200 dark:border-gray-800 bg-white dark:bg-gray-900 shadow-sm flex flex-col gap-2.5">
                     <div className="flex items-start justify-between gap-4">
@@ -248,11 +271,7 @@ const ReleaseReviewTable: React.FC<ReleaseReviewTableProps> = ({
                         <span className="text-gray-400 block text-[9px] uppercase tracking-wider font-medium">Pub Date & Stock</span>
                         <div className="flex flex-col gap-1 items-start">
                           <span className="text-gray-600 dark:text-gray-300 font-medium">{formatDate(row.pub_date)}</span>
-                          <span className={`inline-flex items-center gap-1 text-[9px] font-medium px-1.5 py-0.5 rounded ${
-                            stock.received ? "bg-emerald-100 text-emerald-700 dark:bg-emerald-900/40 dark:text-emerald-300" : "bg-gray-100 text-gray-500 dark:bg-gray-800 dark:text-gray-400"
-                          }`}>
-                            {stock.received ? "✓" : "○"} {stock.label}
-                          </span>
+                          <StockStatusPill inventory={row.inventory ?? 0} arrivalRecordIsLive={row.arrival_record_is_live} />
                         </div>
                       </div>
 
@@ -298,7 +317,6 @@ const ReleaseReviewTable: React.FC<ReleaseReviewTableProps> = ({
                 <tbody className="divide-y divide-gray-200 dark:divide-gray-700">
                   {sortedUpcoming.map((row) => {
                     const days = daysUntil(row.pub_date)
-                    const stock = stockReceivedLabel(row.inventory ?? 0, row.arrival_timing)
                     return (
                       <tr key={row.product_id} className="hover:bg-gray-50 dark:hover:bg-gray-800/50">
                         <td className="px-4 py-3 font-medium text-gray-900 dark:text-white max-w-xs truncate">
@@ -320,13 +338,7 @@ const ReleaseReviewTable: React.FC<ReleaseReviewTableProps> = ({
                           </span>
                         </td>
                         <td className="px-4 py-3">
-                          <span className={`inline-flex items-center gap-1 text-[10px] font-medium px-2 py-0.5 rounded ${
-                            stock.received
-                              ? "bg-emerald-100 text-emerald-700 dark:bg-emerald-900/40 dark:text-emerald-300"
-                              : "bg-gray-100 text-gray-500 dark:bg-gray-800 dark:text-gray-400"
-                          }`}>
-                            {stock.received ? "✓" : "○"} {stock.label}
-                          </span>
+                          <StockStatusPill inventory={row.inventory ?? 0} arrivalRecordIsLive={row.arrival_record_is_live} />
                         </td>
                         <td className="px-4 py-3 text-right">
                           <span className="font-mono font-bold text-xs text-gray-900 dark:text-white">
