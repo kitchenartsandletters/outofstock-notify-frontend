@@ -35,6 +35,7 @@ interface ReconcileReport {
     correctly_assigned: { product_id: number; title: string; pub_date: string; profile: string }[];
     wrong_profile: { product_id: number; title: string; pub_date: string; expected_profile: string; current_profile: string }[];
     missing_from_profile: { product_id: number; title: string; pub_date: string; expected_profile: string }[];
+    arrived_should_detach?: { product_id: number; title: string; pub_date: string; current_profile: string; arrived_at: string | null }[];
     should_be_removed: { product_id: number; title: string; pub_date: string; current_profile: string }[];
     exempt: { product_id: number; title: string; pub_date: string; status: string; inventory: number; current_profile: string; reason: string }[];
     no_pub_date: { product_id: number; title: string; status: string }[];
@@ -42,6 +43,7 @@ interface ReconcileReport {
   migration?: {
     titles_on_week_profile: number;
     titles_needing_migration: number;
+    arrived_to_detach?: number;
     repurpose_ready_profiles: RepurposeReadyProfile[];
   };
 }
@@ -137,13 +139,13 @@ const ShippingProfiles = () => {
   const [actionResults, setActionResults] = useState<Record<number | string, string>>({});
   const [expandedProfile, setExpandedProfile] = useState<number | null>(null);
 
-  // Confirm modal (per-title assign / remove)
+  // Confirm modal (per-title assign / remove / detach)
   const [confirmModal, setConfirmModal] = useState<{
     open: boolean;
     productId: number;
     pubDate: string;
     title: string;
-    action: 'assign' | 'remove';
+    action: 'assign' | 'remove' | 'detach';
     profileName?: string;
   }>({ open: false, productId: 0, pubDate: '', title: '', action: 'assign' });
 
@@ -228,14 +230,14 @@ const ShippingProfiles = () => {
     }
   };
 
-  // ── Remove (→ General) ──
-  const removeProduct = async (productId: number) => {
+  // ── Remove / Detach (→ General) ──
+  const removeProduct = async (productId: number, resultLabel = '→ General') => {
     setActionLoading((p) => ({ ...p, [productId]: true }));
     try {
       const res = await fetch(`${BASE}/remove/${productId}`, { method: 'POST', headers: apiHeaders() });
       const data = await res.json();
       if (!res.ok) throw new Error(data.detail || 'Failed');
-      setActionResults((p) => ({ ...p, [productId]: '→ General' }));
+      setActionResults((p) => ({ ...p, [productId]: resultLabel }));
       await refreshAll();
     } catch (e: any) {
       setActionResults((p) => ({ ...p, [productId]: `Error: ${e.message}` }));
@@ -336,20 +338,23 @@ const ShippingProfiles = () => {
 
   const migration = reconcile?.migration;
   const repurposeReady = migration?.repurpose_ready_profiles || [];
+  const arrivedToDetach = reconcile?.report.arrived_should_detach || [];
 
   // ── Small presentational helper for a title row with one action ──
   const TitleRow = ({ item, variant, actionLabel, onAction, meta }: {
     item: { product_id: number; title: string; pub_date?: string };
-    variant: 'amber' | 'red' | 'blue';
+    variant: 'amber' | 'red' | 'blue' | 'teal';
     actionLabel: string;
     onAction: () => void;
     meta?: ReactNode;
   }) => {
     const border = variant === 'amber' ? 'border-amber-100 dark:border-amber-800/50'
       : variant === 'red' ? 'border-red-100 dark:border-red-800/50'
+      : variant === 'teal' ? 'border-teal-100 dark:border-teal-800/50'
       : 'border-blue-100 dark:border-blue-800/50';
     const btn = variant === 'amber' ? 'bg-amber-600 hover:bg-amber-700'
       : variant === 'red' ? 'bg-red-600 hover:bg-red-700'
+      : variant === 'teal' ? 'bg-teal-600 hover:bg-teal-700'
       : 'bg-blue-600 hover:bg-blue-700';
     return (
       <div className={`flex flex-col sm:flex-row sm:items-center justify-between gap-3 text-sm bg-white dark:bg-gray-800 rounded-xl sm:rounded-lg px-4 py-3 sm:py-2 border ${border} shadow-sm`}>
@@ -383,6 +388,12 @@ const ShippingProfiles = () => {
                 <span className="font-semibold text-green-600 dark:text-green-400">{migration.titles_on_week_profile}</span> on week profiles
                 {' · '}
                 <span className="font-semibold text-amber-600 dark:text-amber-400">{migration.titles_needing_migration}</span> to migrate
+                {migration.arrived_to_detach ? (
+                  <>
+                    {' · '}
+                    <span className="font-semibold text-teal-600 dark:text-teal-400">{migration.arrived_to_detach}</span> to detach
+                  </>
+                ) : null}
                 {' · '}
                 {weekProfiles.length} week profiles · {legacyDateProfiles.length} legacy
               </>
@@ -416,63 +427,28 @@ const ShippingProfiles = () => {
         </div>
       )}
 
-      {/* ── Migration: apply whole weeks ── */}
-      {actionableWeeks.length > 0 && (
-        <div className="rounded-xl border border-indigo-200 dark:border-indigo-800 bg-indigo-50/60 dark:bg-indigo-900/10 p-4 space-y-3">
-          <div className="flex items-center justify-between">
-            <h3 className="text-sm font-semibold text-indigo-900 dark:text-indigo-200">
-              Migration — {actionableWeeks.length} week{actionableWeeks.length === 1 ? '' : 's'} to consolidate
-            </h3>
-            <span className="text-xs text-indigo-500 dark:text-indigo-400">Apply one week, rate-check, repeat</span>
-          </div>
+      {/* ── Stock Received — detach (arrived active preorders) ── */}
+      {arrivedToDetach.length > 0 && (
+        <div className="rounded-xl border border-teal-200 dark:border-teal-800 bg-teal-50 dark:bg-teal-900/10 p-4">
+          <h3 className="text-sm font-semibold text-teal-900 dark:text-teal-200 mb-1">
+            Stock Received — Detach ({arrivedToDetach.length})
+          </h3>
+          <p className="text-xs text-teal-700/80 dark:text-teal-400/80 mb-3 leading-relaxed">
+            These preorders have physically arrived and are fulfillable now. Detach each from its shipping profile — it falls back to General.
+          </p>
           <div className="space-y-2.5">
-            {actionableWeeks.map((week) => {
-              const key = `apply-${week.week_start}`;
-              const movingCount = week.titles.filter((t) => t.action !== 'already').length;
-              return (
-                <div key={week.week_start} className="bg-white dark:bg-gray-800 rounded-xl border border-indigo-100 dark:border-indigo-800/50 shadow-sm overflow-hidden">
-                  <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 px-4 py-3">
-                    <div className="min-w-0">
-                      <div className="font-semibold text-gray-900 dark:text-gray-100 flex items-center gap-2">
-                        <span className="truncate">{week.profile_name}</span>
-                        <span className={`shrink-0 text-[10px] uppercase font-bold tracking-wider px-1.5 py-0.5 rounded ${week.profile_status === 'create'
-                          ? 'bg-indigo-100 text-indigo-700 dark:bg-indigo-950/60 dark:text-indigo-300'
-                          : 'bg-green-100 text-green-700 dark:bg-green-950/60 dark:text-green-300'}`}>
-                          {week.profile_status === 'create' ? 'new' : 'exists'}
-                        </span>
-                      </div>
-                      <div className="text-xs text-gray-400 mt-0.5">
-                        {formatDate(week.week_start)} – {formatDate(week.week_end)} · {movingCount} to move
-                      </div>
-                    </div>
-                    <div className="flex items-center gap-3 shrink-0">
-                      {actionResults[key] && <span className="text-xs font-medium text-green-600 dark:text-green-400">{actionResults[key]}</span>}
-                      <button onClick={() => setApplyModal({ open: true, week })} disabled={!!actionLoading[key]}
-                        className="w-full sm:w-auto px-4 py-2 sm:py-1.5 text-xs font-semibold rounded-lg text-white bg-indigo-600 hover:bg-indigo-700 disabled:opacity-50 transition-transform active:scale-[0.98]">
-                        {actionLoading[key] ? 'Applying…' : 'Apply week'}
-                      </button>
-                    </div>
-                  </div>
-                  <div className="bg-gray-50/60 dark:bg-gray-900/30 border-t border-gray-100 dark:border-gray-700/50 px-4 py-2.5 space-y-1.5">
-                    {week.titles.map((t) => (
-                      <div key={t.product_id} className="flex items-center justify-between gap-3 text-xs">
-                        <span className="truncate text-gray-700 dark:text-gray-300" title={t.title}>{t.title}</span>
-                        <div className="flex items-center gap-2 shrink-0">
-                          <span className="text-gray-400 hidden sm:inline">{t.current_profile}</span>
-                          <span className={`px-1.5 py-0.5 rounded font-semibold ${t.action === 'move'
-                            ? 'bg-amber-50 text-amber-700 dark:bg-amber-950/40 dark:text-amber-300'
-                            : t.action === 'add'
-                            ? 'bg-blue-50 text-blue-700 dark:bg-blue-950/40 dark:text-blue-300'
-                            : 'bg-green-50 text-green-700 dark:bg-green-950/40 dark:text-green-300'}`}>
-                            {t.action}
-                          </span>
-                        </div>
-                      </div>
-                    ))}
-                  </div>
-                </div>
-              );
-            })}
+            {arrivedToDetach.map((item) => (
+              <TitleRow key={item.product_id} item={item} variant="teal" actionLabel="Detach"
+                onAction={() => setConfirmModal({ open: true, productId: item.product_id, pubDate: item.pub_date, title: item.title, action: 'detach', profileName: item.current_profile })}
+                meta={
+                  <>
+                    <span className="text-gray-400">on {item.current_profile}</span>
+                    {item.arrived_at && (
+                      <span className="text-teal-600 dark:text-teal-400">· arrived {formatDate(item.arrived_at.slice(0, 10))}</span>
+                    )}
+                  </>
+                } />
+            ))}
           </div>
         </div>
       )}
@@ -657,24 +633,32 @@ const ShippingProfiles = () => {
         </div>
       )}
 
-      {/* ── Confirm Modal (assign / remove) ── */}
+      {/* ── Confirm Modal (assign / remove / detach) ── */}
       <ConfirmModal
         open={confirmModal.open}
         onCancel={() => setConfirmModal((p) => ({ ...p, open: false }))}
         onConfirm={async () => {
+          const action = confirmModal.action;
           setConfirmModal((p) => ({ ...p, open: false }));
-          if (confirmModal.action === 'assign') await weekAssign(confirmModal.productId, confirmModal.pubDate);
+          if (action === 'assign') await weekAssign(confirmModal.productId, confirmModal.pubDate);
+          else if (action === 'detach') await removeProduct(confirmModal.productId, '→ General (detached)');
           else await removeProduct(confirmModal.productId);
         }}
-        title={confirmModal.action === 'assign' ? 'Assign to Week Profile' : 'Remove from Profile'}
-        variant={confirmModal.action === 'assign' ? 'primary' : 'danger'}
-        confirmLabel={confirmModal.action === 'assign' ? 'Assign' : 'Remove'}
+        title={confirmModal.action === 'assign' ? 'Assign to Week Profile' : confirmModal.action === 'detach' ? 'Detach — Stock Received' : 'Remove from Profile'}
+        variant={confirmModal.action === 'remove' ? 'danger' : 'primary'}
+        confirmLabel={confirmModal.action === 'assign' ? 'Assign' : confirmModal.action === 'detach' ? 'Detach' : 'Remove'}
       >
         {confirmModal.action === 'assign' ? (
           <div className="space-y-2">
             <p>Assign this title to its release-week profile:</p>
             <p className="font-semibold text-gray-900 dark:text-white bg-gray-50 dark:bg-gray-800 p-2.5 rounded-lg border border-gray-150 dark:border-gray-700 line-clamp-2">{confirmModal.title}</p>
             <p className="text-xs text-gray-400 dark:text-gray-500 pt-1">Target: <span className="font-semibold text-gray-700 dark:text-gray-300">{confirmModal.profileName}</span>. Created on the verified builder if it doesn't exist yet.</p>
+          </div>
+        ) : confirmModal.action === 'detach' ? (
+          <div className="space-y-2">
+            <p>This title has arrived and is fulfillable now. Detach it from its shipping profile (falls back to General):</p>
+            <p className="font-semibold text-gray-900 dark:text-white bg-gray-50 dark:bg-gray-800 p-2.5 rounded-lg border border-gray-150 dark:border-gray-700 line-clamp-2">{confirmModal.title}</p>
+            <p className="text-xs text-gray-400 dark:text-gray-500 pt-1">Currently on <span className="font-semibold text-gray-700 dark:text-gray-300">{confirmModal.profileName}</span>.</p>
           </div>
         ) : (
           <div className="space-y-2">
