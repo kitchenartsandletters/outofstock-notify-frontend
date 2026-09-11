@@ -33,7 +33,9 @@ export function toISODate(d: Date): string {
   return `${y}-${m}-${day}`
 }
 
-/** Operational stock status label for the Releases Upcoming section */
+/** Operational stock status label for the Releases Upcoming section.
+ *  DEPRECATED in favor of stockStatusLabel — retained for back-compat with
+ *  any remaining callers. Binary: on-hand vs awaiting, from inventory only. */
 export function stockReceivedLabel(
   inventory: number,
   arrivalTiming: string | null | undefined
@@ -47,6 +49,31 @@ export function stockReceivedLabel(
     return { label: "Stock in hand", received: true }
   }
   return { label: "Awaiting stock", received: false }
+}
+
+/** Three-state operational stock status.
+ *
+ *  Resolves the "Awaiting stock" contradiction for titles that physically
+ *  received stock but oversold into negative inventory: those are neither
+ *  "in hand" (no stock now) nor "awaiting" (stock did arrive). They are
+ *  "Received · oversold".
+ *
+ *  Keyed off arrival_record_is_live — the clean live-webhook receipt signal
+ *  (a live inventory event drove inventory positive within 60s) — NOT
+ *  arrival_timing, which can reflect refund restocks / PO allocations and is
+ *  the noise the binary label deliberately avoided.
+ *
+ *   inventory > 0                         → "Stock in hand"      (in_hand)
+ *   inventory <= 0 && arrivalRecordIsLive → "Received · oversold" (received_oversold)
+ *   inventory <= 0 && !arrivalRecordIsLive→ "Awaiting stock"     (awaiting)
+ */
+export function stockStatusLabel(
+  inventory: number,
+  arrivalRecordIsLive: boolean | null | undefined
+): { label: string; state: "in_hand" | "received_oversold" | "awaiting" } {
+  if (inventory > 0) return { label: "Stock in hand", state: "in_hand" }
+  if (arrivalRecordIsLive) return { label: "Received · oversold", state: "received_oversold" }
+  return { label: "Awaiting stock", state: "awaiting" }
 }
 
 export type SortDirection = "asc" | "desc"
