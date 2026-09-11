@@ -58,6 +58,7 @@ type PreorderMetricsAPI = {
   total_estimated_presold_units: number | string
   late_arrivals_unresolved: number
   no_arrival_count: number
+  arrived_active_count: number
 }
 
 type ReportableAPI = ReportablePreorderRow
@@ -120,6 +121,10 @@ function adaptReleaseQueueRow(row: ReleaseQueueAPI): ReleaseReviewRow {
     classification: row.classification,
     pub_date: row.pub_date,
     arrival_timing: row.arrival_timing as ReleaseReviewRow["arrival_timing"],
+    // Carry the live-arrival flag so the Releases Upcoming stock label can show
+    // "Received · oversold" for arrived-but-negative titles. Without this the
+    // field is dropped and the pill falls through to "Awaiting stock".
+    arrival_record_is_live: row.arrival_record_is_live ?? false,
     due_for_release_review: row.due_for_release_review ?? false,
     early_stock_arrival: row.early_stock_arrival ?? false,
     anomaly_type: row.anomaly_type,
@@ -139,6 +144,7 @@ function adaptMetrics(row: PreorderMetricsAPI): PreorderSummaryMetrics {
     total_estimated_presold_units: Number(row.total_estimated_presold_units) ?? 0,
     late_arrivals_unresolved: row.late_arrivals_unresolved ?? 0,
     no_arrival_count: row.no_arrival_count ?? 0,
+    arrived_active_count: row.arrived_active_count ?? 0,
   }
 }
 
