@@ -24,6 +24,14 @@ interface NoArrivalTitle {
   classification: string
 }
 
+interface ArrivedActiveTitle {
+  product_id: number
+  title: string
+  isbn: string | null
+  pub_date: string | null
+  first_positive_inventory_at: string | null
+}
+
 interface PubDateDiscrepancy {
   id: number
   product_id: number
@@ -157,6 +165,11 @@ const PreorderSummaryCards: React.FC<PreorderSummaryCardsProps> = ({
   const [showNoArrivals, setShowNoArrivals] = useState(false)
   const [loadingNoArrivals, setLoadingNoArrivals] = useState(false)
 
+  // Arrived-but-still-active titles (stock received, oversold into negative)
+  const [arrivedActive, setArrivedActive] = useState<ArrivedActiveTitle[]>([])
+  const [showArrivedActive, setShowArrivedActive] = useState(false)
+  const [loadingArrivedActive, setLoadingArrivedActive] = useState(false)
+
   // Pub date discrepancies
   const [discrepancies, setDiscrepancies] = useState<PubDateDiscrepancy[]>([])
   const [discrepancyCount, setDiscrepancyCount] = useState<number | null>(null)
@@ -226,6 +239,38 @@ const PreorderSummaryCards: React.FC<PreorderSummaryCardsProps> = ({
       console.error("Failed to fetch no-arrival titles", err)
     } finally {
       setLoadingNoArrivals(false)
+    }
+  }
+
+  // Arrived-active titles are derived client-side from /products: active preorders
+  // carrying a live arrival record. No dedicated endpoint — detachment happens in
+  // the Shipping Profiles view, this bar is purely informational.
+  const handleArrivedActiveClick = async () => {
+    if (showArrivedActive) { setShowArrivedActive(false); return }
+    setLoadingArrivedActive(true)
+    try {
+      const res = await fetch(
+        `${PREORDER_SERVICE_URL}/admin/preorders/products`,
+        { headers: preorderHeaders() }
+      )
+      if (res.ok) {
+        const rows: any[] = await res.json()
+        const filtered: ArrivedActiveTitle[] = rows
+          .filter(r => r.classification === "active_preorder" && r.arrival_record_is_live === true)
+          .map(r => ({
+            product_id: r.product_id,
+            title: r.title,
+            isbn: r.isbn ?? null,
+            pub_date: r.pub_date ?? null,
+            first_positive_inventory_at: r.first_positive_inventory_at ?? null,
+          }))
+        setArrivedActive(filtered)
+        setShowArrivedActive(true)
+      }
+    } catch (err) {
+      console.error("Failed to fetch arrived-active titles", err)
+    } finally {
+      setLoadingArrivedActive(false)
     }
   }
 
@@ -412,6 +457,54 @@ const PreorderSummaryCards: React.FC<PreorderSummaryCardsProps> = ({
         </div>
 
         )}
+
+        {/* ── Stock Received — Active (informational) ── */}
+        {metrics.arrived_active_count > 0 && (
+          <div className="flex flex-col gap-1 px-3 py-2 rounded border border-emerald-200 dark:border-emerald-800 bg-emerald-50 dark:bg-emerald-900/20">
+            <div
+              className="flex items-center gap-2 cursor-pointer"
+              onClick={handleArrivedActiveClick}
+            >
+              <span className="text-emerald-600 dark:text-emerald-400 text-sm font-bold">
+                {metrics.arrived_active_count}
+              </span>
+              <span className="text-xs text-emerald-700 dark:text-emerald-300 flex-1">
+                active {metrics.arrived_active_count === 1 ? "preorder has" : "preorders have"} received stock — candidate{metrics.arrived_active_count === 1 ? "" : "s"} for shipping-profile detachment
+              </span>
+              <span className="text-xs text-emerald-600 dark:text-emerald-400 font-medium">
+                {loadingArrivedActive ? "…" : showArrivedActive ? "▲" : "▼"}
+              </span>
+            </div>
+
+            {showArrivedActive && arrivedActive.length > 0 && (
+              <div className="mt-2 space-y-1.5 border-t border-emerald-200 dark:border-emerald-700 pt-2">
+                {arrivedActive.map(row => (
+                  <div key={row.product_id} className="flex items-center justify-between text-xs gap-2">
+                    <div className="min-w-0 flex-1">
+                      <span className="text-emerald-800 dark:text-emerald-200 font-medium truncate block max-w-[260px]">
+                        {row.title}
+                      </span>
+                      <span className="text-emerald-600 dark:text-emerald-400 font-mono text-[10px]">
+                        {row.pub_date ? `pub ${formatDateShort(row.pub_date)}` : "no pub date"}
+                        {row.first_positive_inventory_at ? ` · stock ${formatDateShort(row.first_positive_inventory_at)}` : ""}
+                      </span>
+                    </div>
+                    <span className="text-emerald-500 dark:text-emerald-400 text-[10px] italic shrink-0">
+                      detach in Shipping Profiles
+                    </span>
+                  </div>
+                ))}
+              </div>
+            )}
+
+            {showArrivedActive && arrivedActive.length === 0 && !loadingArrivedActive && (
+              <div className="mt-2 border-t border-emerald-200 dark:border-emerald-700 pt-2">
+                <span className="text-xs text-emerald-400">No arrived active preorders.</span>
+              </div>
+            )}
+          </div>
+        )}
+
         {/* ── No-Arrival Alert ── */}
         {metrics.no_arrival_count > 0 && (
           <div className="flex flex-col gap-1 px-3 py-2 rounded border border-red-200 dark:border-red-800 bg-red-50 dark:bg-red-900/20">

@@ -19,6 +19,11 @@ interface PreorderProduct {
   preorder_collection_present: boolean;
   anomaly_type: string | null;
   last_updated: string | null;
+  // Arrival signal — present on active preorders whose stock physically arrived.
+  // Independent of current inventory sign (a title can arrive and then oversell
+  // into negative inventory while still classified active_preorder).
+  arrival_record_is_live?: boolean;
+  first_positive_inventory_at?: string | null;
 }
 
 interface CleanupState {
@@ -73,6 +78,12 @@ function formatDate(dateStr: string | null): string {
   return d.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' });
 }
 
+function formatTimestamp(ts: string | null | undefined): string {
+  if (!ts) return '—';
+  const d = new Date(ts);
+  return d.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' });
+}
+
 function stripArticle(title: string): string {
   return title.replace(/^(the|a|an)\s+/i, '');
 }
@@ -95,6 +106,14 @@ function isWithinDays(pubDate: string | null, days: number): boolean {
   return pub >= today && pub <= future;
 }
 
+// A title has received stock when it carries a live inventory_arrival record.
+// Surfaced on active preorders because such a title is fulfillable now and is a
+// candidate for early shipping-profile detachment — a fact the classification
+// alone (active_preorder) does not convey.
+function hasReceivedStock(product: PreorderProduct): boolean {
+  return product.classification === 'active_preorder' && product.arrival_record_is_live === true;
+}
+
 function classificationBadge(classification: string) {
   switch (classification) {
     case 'active_preorder':
@@ -111,6 +130,21 @@ function classificationBadge(classification: string) {
         };
       return { label: classification, cls: 'bg-gray-100 text-gray-600 dark:bg-gray-700/50 dark:text-gray-400' };
   }
+}
+
+// Small "stock received" pill shown alongside the classification badge on active
+// preorders that have arrived. Title carries the arrival date for context.
+function StockReceivedBadge({ product }: { product: PreorderProduct }) {
+  if (!hasReceivedStock(product)) return null;
+  const arrived = formatTimestamp(product.first_positive_inventory_at);
+  return (
+    <span
+      title={`Stock received${arrived !== '—' ? ` on ${arrived}` : ''} — fulfillable now; candidate for shipping-profile detachment`}
+      className="inline-flex items-center gap-1 px-2 py-0.5 rounded text-[10px] sm:text-xs font-semibold whitespace-nowrap bg-emerald-100 text-emerald-800 dark:bg-emerald-900/50 dark:text-emerald-300"
+    >
+      ✓ Stock received
+    </span>
+  );
 }
 
 function descBadge(status: string) {
@@ -445,6 +479,7 @@ const ReleaseManagement = () => {
                   <div className="flex items-start sm:items-center gap-2.5 min-w-0">
                     <span className="font-semibold sm:font-medium text-gray-900 dark:text-gray-100 line-clamp-2 sm:truncate">{p.title}</span>
                     <span className={`shrink-0 px-2 py-0.5 rounded text-[10px] sm:text-xs font-semibold sm:font-medium whitespace-nowrap mt-0.5 sm:mt-0 ${badge.cls}`}>{badge.label}</span>
+                    <span className="shrink-0 mt-0.5 sm:mt-0"><StockReceivedBadge product={p} /></span>
                   </div>
                   <div className="flex items-center justify-between sm:justify-end gap-4 shrink-0 pt-2 sm:pt-0 border-t sm:border-t-0 border-gray-100 dark:border-gray-700/60">
                     <span className="text-xs font-mono sm:font-sans text-gray-500 dark:text-gray-400 whitespace-nowrap">{formatDate(p.pub_date)}</span>
@@ -559,7 +594,10 @@ const ReleaseManagement = () => {
                   <h4 className="font-semibold text-gray-900 dark:text-gray-100 leading-snug line-clamp-2">{product.title}</h4>
                   <span className="text-xs font-mono text-gray-400 dark:text-gray-500 block mt-1">{product.isbn || product.product_id}</span>
                 </div>
-                <span className={`inline-block px-2 py-0.5 rounded text-[10px] font-semibold tracking-wide whitespace-nowrap uppercase ${badge.cls}`}>{badge.label}</span>
+                <div className="flex flex-col items-end gap-1 shrink-0">
+                  <span className={`inline-block px-2 py-0.5 rounded text-[10px] font-semibold tracking-wide whitespace-nowrap uppercase ${badge.cls}`}>{badge.label}</span>
+                  <StockReceivedBadge product={product} />
+                </div>
               </div>
 
               <div className="grid grid-cols-2 gap-2 text-xs bg-gray-50 dark:bg-gray-800/40 p-2.5 rounded-lg border border-gray-100 dark:border-gray-700/30">
@@ -626,7 +664,10 @@ const ReleaseManagement = () => {
                     {pastPub && <span className="ml-1.5 text-xs font-medium text-amber-600 dark:text-amber-400 px-1.5 py-0.5 bg-amber-50 dark:bg-amber-900/20 border border-amber-100 dark:border-amber-900/30 rounded">past</span>}
                   </td>
                   <td className="px-4 py-3">
-                    <span className={`inline-block px-2 py-0.5 rounded text-xs font-medium ${badge.cls}`}>{badge.label}</span>
+                    <div className="flex items-center gap-1.5">
+                      <span className={`inline-block px-2 py-0.5 rounded text-xs font-medium ${badge.cls}`}>{badge.label}</span>
+                      <StockReceivedBadge product={product} />
+                    </div>
                   </td>
                   <td className="px-4 py-3">{renderCleanupCell(product.product_id, 'description_status')}</td>
                   {/* Fixed: text-center handles content layout matching head column */}

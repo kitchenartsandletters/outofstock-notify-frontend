@@ -94,6 +94,12 @@ export interface PreorderSummaryMetrics {
   late_arrivals_unresolved: number   // count of preorders with late_arrival timing but not yet marked as early_stock_arrival
   no_arrival_count: number             // count of preorders with no_arrival timing
 
+  // Arrived-but-still-active: active_preorder titles with a live inventory_arrival
+  // record. Stock physically received but demand oversold it into negative
+  // inventory, so it stays active_preorder. Fulfillable now; candidates for
+  // early shipping-profile detachment.
+  arrived_active_count: number
+
   // Removed: anomalies (not in backend view), already_reported_this_week (Phase 6)
 }
 
