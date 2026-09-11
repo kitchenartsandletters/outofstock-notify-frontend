@@ -46,6 +46,26 @@ function getConfidenceBadgeClass(confidence: string) {
     : `${base} bg-amber-100 text-amber-700 dark:bg-amber-900/40 dark:text-amber-300`
 }
 
+// An active preorder has received stock when it carries a live inventory_arrival
+// record — even if demand oversold it into negative inventory (it then stays
+// active_preorder rather than becoming early_stock_arrival). Surfaces "stock is
+// in the building" and flags a shipping-profile detachment candidate.
+function hasReceivedStock(row: PreorderRow): boolean {
+  return row.classification === "active_preorder" && row.arrival_record_is_live === true
+}
+
+function StockReceivedBadge({ row }: { row: PreorderRow }) {
+  if (!hasReceivedStock(row)) return null
+  return (
+    <span
+      title="Stock received — fulfillable now; candidate for shipping-profile detachment"
+      className="inline-flex items-center gap-1 px-2 py-0.5 rounded text-[10px] sm:text-xs font-semibold whitespace-nowrap bg-emerald-100 text-emerald-800 dark:bg-emerald-900/50 dark:text-emerald-300 ml-1.5"
+    >
+      ✓ Stock received
+    </span>
+  )
+}
+
 type SortKey = "title" | "classification" | "pub_date"
 
 const PreorderTable: React.FC<PreorderTableProps> = ({
@@ -142,9 +162,12 @@ const PreorderTable: React.FC<PreorderTableProps> = ({
             {/* Middle Row: Status and Status Anomalies */}
             {!isHistorical && (
               <div className="pt-0.5 border-t border-gray-100 dark:border-gray-800/60">
-                <span className={getClassificationBadgeClass(row.classification)}>
-                  {formatClassificationLabel(row.classification)}
-                </span>
+                <div className="flex items-center flex-wrap gap-1.5">
+                  <span className={getClassificationBadgeClass(row.classification)}>
+                    {formatClassificationLabel(row.classification)}
+                  </span>
+                  <StockReceivedBadge row={row} />
+                </div>
                 {row.classification === "early_stock_arrival" && row.arrival_timing && (
                   <div className={`text-[10px] mt-1 font-medium ${
                     row.arrival_timing === "early_arrival" ? "text-purple-600 dark:text-purple-400" : "text-gray-500 dark:text-gray-400"
@@ -237,9 +260,12 @@ const PreorderTable: React.FC<PreorderTableProps> = ({
                 </td>
                 {!isHistorical && (
                   <td className="px-3 sm:px-4 py-3">
-                    <span className={getClassificationBadgeClass(row.classification)}>
-                      {formatClassificationLabel(row.classification)}
-                    </span>
+                    <div className="flex items-center flex-wrap gap-1.5">
+                      <span className={getClassificationBadgeClass(row.classification)}>
+                        {formatClassificationLabel(row.classification)}
+                      </span>
+                      <StockReceivedBadge row={row} />
+                    </div>
                     {row.classification === "early_stock_arrival" && row.arrival_timing && (
                       <div className={`text-[9px] mt-0.5 font-medium ${
                         row.arrival_timing === "early_arrival"
