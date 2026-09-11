@@ -1,6 +1,7 @@
 import React, { useState, useRef, useEffect, useMemo } from 'react';
 import { InterestEntry, StatusPhase, STATUS_ORDER } from '../types';
 import RightSidebar from './RightSidebar';
+import RequestNotes from './RequestNotes';
 
 interface RequestTableProps {
   filteredData: InterestEntry[];
@@ -369,6 +370,11 @@ const RequestTable: React.FC<RequestTableProps> = ({
                 </a>
               </div>
             </div>
+
+            <hr className="border-gray-200 dark:border-gray-700" />
+
+            {/* Notes */}
+            <RequestNotes requestId={selected.id} crId={selected.cr_id} />
 
           </div>
         )}
