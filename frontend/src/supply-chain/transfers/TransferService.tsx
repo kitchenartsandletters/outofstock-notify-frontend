@@ -9,6 +9,7 @@ import { fetchTransfers, fetchTransferDetail, fetchLocations, Location } from '.
 import { formatDate, SortConfig, SortIcon, nextSortDirection } from '../../utils/tableUtils'
 import TransferDispatchForm from './TransferDispatchForm'
 import TransferReceivePanel from './TransferReceivePanel'
+import TransfersSearch from './TransfersSearch'
 import RightSidebar from '../../components/RightSidebar'
 
 type LocMap = Record<string, Location>
@@ -344,6 +345,8 @@ export default function TransferService() {
             {error}
           </div>
         )}
+
+        <TransfersSearch />
 
         {/* Formatted controls following the requested pattern */}
         <div className="space-y-4">
