@@ -7,6 +7,7 @@ import {
   fetchReturnsList, fetchReturnsPublishers, createReturn,
   ReturnIndexRow, ReturnsPublisherTile, ReturnStatus,
 } from '../../api/returnsApi';
+import ReturnsSearch from './ReturnsSearch';
 
 const money = (v: number | null | undefined) =>
   v == null ? '—' : v.toLocaleString(undefined, { style: 'currency', currency: 'USD' });
@@ -93,6 +94,8 @@ export default function ReturnsWorkspace() {
       {error && (
         <div className="text-sm rounded border border-red-300 bg-red-50 dark:bg-red-950/40 dark:border-red-700 text-red-700 dark:text-red-300 px-3 py-2">{error}</div>
       )}
+
+      <ReturnsSearch />
 
       {pickerOpen && (
         <div className="rounded border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800 p-3">
