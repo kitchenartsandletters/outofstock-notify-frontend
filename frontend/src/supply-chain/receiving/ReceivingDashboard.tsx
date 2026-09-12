@@ -22,6 +22,7 @@ import {
   fetchReceiptHistory,
 } from '../../api/supplyChainApi'
 import { PurchaseOrder, PurchaseOrderDetail } from '../purchase-orders/purchaseOrderTypes'
+import AwaitingReceipt from './AwaitingReceipt'
 import { SortConfig, SortIcon } from '../../utils/tableUtils'
 
 // ---------------------------------------------------------------------------
@@ -392,56 +393,6 @@ export default function ReceivingDashboard() {
         </div>
       )}
 
-      {/* Awaiting receipt */}
-      {(posLoading || submittedPOs.length > 0) && (
-        <div className="border dark:border-gray-700 rounded-lg overflow-hidden bg-white dark:bg-gray-900 shadow-sm">
-          <div className="px-4 py-2.5 bg-gray-50 dark:bg-gray-800 border-b dark:border-gray-700 flex items-center justify-between">
-            <h3 className="text-xs font-bold uppercase tracking-wider text-gray-500 dark:text-gray-400">Awaiting receipt</h3>
-            <span className="text-xs text-gray-400 font-medium">{submittedPOs.length} PO{submittedPOs.length !== 1 ? 's' : ''}</span>
-          </div>
-          {posLoading ? (
-            <div className="p-4 space-y-2">
-              {[1,2,3].map(i => <div key={i} className="h-8 bg-gray-100 dark:bg-gray-800 rounded animate-pulse" />)}
-            </div>
-          ) : submittedPOs.length === 0 ? (
-            <p className="px-4 py-3 text-xs text-gray-400 dark:text-gray-500">No POs awaiting receipt.</p>
-          ) : (
-            <div className="divide-y dark:divide-gray-800 overflow-x-auto scrollbar-none">
-              <div className="flex flex-col min-w-full">
-                {submittedPOs.map(po => (
-                  <button key={po.id} onClick={() => navigate(`/receiving/wizard?po=${po.id}`)}
-                    className="w-full flex items-center justify-between px-4 py-3 hover:bg-blue-50 dark:hover:bg-blue-900/20 transition-colors text-left gap-3">
-                    <div className="flex items-center gap-2 min-w-0">
-                      <span className={`text-[9px] sm:text-[10px] px-1.5 py-0.5 rounded font-semibold uppercase shrink-0
-                        ${po.status === 'confirmed' ? 'bg-indigo-100 text-indigo-700 dark:bg-indigo-900/30 dark:text-indigo-300'
-                          : po.status === 'partial' ? 'bg-amber-100 text-amber-700 dark:bg-amber-900/30 dark:text-amber-300'
-                          : 'bg-blue-100 text-blue-700 dark:bg-blue-900/30 dark:text-blue-300'}`}>
-                        {po.status}
-                      </span>
-                      <span className="text-xs sm:text-sm font-medium text-gray-900 dark:text-gray-100 truncate">
-                        {po.supplier_name ?? po.account_label}
-                      </span>
-                      {(po as any).is_test && (
-                        <span className="text-[9px] font-bold px-1 py-0.5 rounded bg-yellow-100 text-yellow-700 dark:bg-yellow-900/30 dark:text-yellow-300 uppercase shrink-0">Test</span>
-                      )}
-                    </div>
-                    <div className="flex items-center gap-2.5 shrink-0 text-right">
-                      <span className="text-[11px] sm:text-xs font-mono text-gray-400">{po.po_number}</span>
-                      {po.expected_at && (
-                        <span className="text-[10px] sm:text-xs text-gray-400 whitespace-nowrap hidden xs:inline">
-                          due {new Date(po.expected_at).toLocaleDateString('en-US', { month: 'short', day: 'numeric' })}
-                        </span>
-                      )}
-                      <span className="text-xs font-medium text-blue-500 whitespace-nowrap">Receive &rarr;</span>
-                    </div>
-                  </button>
-                ))}
-              </div>
-            </div>
-          )}
-        </div>
-      )}
-
       {/* Search bar */}
       <div className="relative">
         <input
@@ -462,6 +413,9 @@ export default function ReceivingDashboard() {
           <div className="absolute right-3 top-2.5 w-4 h-4 border-2 border-blue-500 border-t-transparent rounded-full animate-spin" />
         )}
       </div>
+
+      {/* Awaiting receipt — tabbed, abridged, with a Show all modal. */}
+      <AwaitingReceipt pos={submittedPOs} loading={posLoading} />
 
       {/* Filter tabs */}
       <div className="flex gap-1 overflow-x-auto pb-1 border-b dark:border-gray-800/80 scrollbar-none">
